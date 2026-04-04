@@ -443,8 +443,36 @@ let CFG = {
   BASE:           'https://open.larksuite.com/open-apis',
 };
 
-// Load configuration - for testing use direct config
+// Demo mode for testing - simulate data
+const DEMO_MODE = true;
+let mockData = {
+  studentsC: [
+    { name: 'Alice李', driver: 'Uncle王', address: 'Jalan Bukit Bintang 123', phone: '0123456789', time: '07:30', type: 'C' },
+    { name: 'Bob陈', driver: 'Uncle李', address: 'KLCC附近', phone: '0198765432', time: '07:45', type: 'C' },
+    { name: 'Carol张', driver: 'Uncle王', address: 'Mont Kiara', phone: '0111222333', time: '08:00', type: 'C' }
+  ],
+  studentsB: [
+    { name: 'Alice李', driver: 'Uncle王', address: 'Jalan Bukit Bintang 123', phone: '0123456789', time: '15:30', type: 'B' },
+    { name: 'Bob陈', driver: 'Uncle李', address: 'KLCC附近', phone: '0198765432', time: '16:00', type: 'B' },
+    { name: 'David刘', driver: 'Uncle张', address: 'Bangsar South', phone: '0144555666', time: '16:15', type: 'B' }
+  ]
+};
+
+// Load configuration - demo mode
 async function loadConfig() {
+  if (DEMO_MODE) {
+    CFG = {
+      APP_ID: 'demo_mode',
+      APP_SECRET: 'demo_mode', 
+      APP_TOKEN: 'demo_mode',
+      MASTER_TABLE: 'demo_table',
+      ROLLCALL_TABLE: 'demo_rollcall',
+      BASE: 'demo_api',
+    };
+    console.log('🎭 演示模式：使用模拟数据');
+    return;
+  }
+  
   try {
     // Try to load from API first
     const response = await fetch('/api/config');
@@ -458,14 +486,14 @@ async function loadConfig() {
     console.log('⚠️ API配置加载失败，使用直接配置');
   }
   
-  // Fallback to direct configuration for testing
+  // Fallback to direct configuration
   CFG = {
-    APP_ID:         'cli_a945f55fcb789e15',
-    APP_SECRET:     'VIQRln9sTOss61v8EgtK6cWK55NHuf6A',
-    APP_TOKEN:      'U6v3bat8ya7zC4seMZhj4yFVpAe',
-    MASTER_TABLE:   'tbl5TqclpTe3eaXf',
+    APP_ID: 'cli_a945f55fcb789e15',
+    APP_SECRET: 'VIQRln9sTOss61v8EgtK6cWK55NHuf6A',
+    APP_TOKEN: 'U6v3bat8ya7zC4seMZhj4yFVpAe',
+    MASTER_TABLE: 'tbl5TqclpTe3eaXf',
     ROLLCALL_TABLE: 'tblAuvKa4klEnsx1',
-    BASE:           'https://open.larksuite.com/open-apis',
+    BASE: 'https://open.larksuite.com/open-apis',
   };
   console.log('🔧 使用直接配置进行测试');
 }
@@ -644,74 +672,87 @@ async function init() {
   document.getElementById('summary').style.display = 'none';
 
   try {
-    // 1. Ensure fields exist in roll call table
-    await ensureRollCallFields();
+    if (DEMO_MODE) {
+      // Use demo data
+      studentsC = mockData.studentsC;
+      studentsB = mockData.studentsB;
+      
+      // Initialize mock roll call data
+      rollCallMap = {};
+      [...studentsC, ...studentsB].forEach(s => {
+        const key = `${s.name}|${s.type}`;
+        rollCallMap[key] = { recordId: `demo_${key}`, status: '待确认' };
+      });
+      
+      console.log('🎭 使用演示数据');
+    } else {
+      // Original API logic
+      await ensureRollCallFields();
+      const colC = `${dayPrefix}(C)`;
+      const colB = `${dayPrefix}(B)`;
+      const masterRecs = await getAllRecords(CFG.MASTER_TABLE);
 
-    // 2. Read master schedule for today
-    const colC = `${dayPrefix}(C)`;
-    const colB = `${dayPrefix}(B)`;
-    const masterRecs = await getAllRecords(CFG.MASTER_TABLE);
+      studentsC = [];
+      studentsB = [];
+      for (const rec of masterRecs) {
+        const f = rec.fields;
+        const name = cellText(f['名字']);
+        if (!name) continue;
+        const driver = cellText(f['driver']);
+        const address = cellText(f['ADDRESS']);
+        const phone = cellText(f['电话号码']);
+        const timeC = cellText(f[colC]);
+        const timeB = cellText(f[colB]);
+        if (timeC) studentsC.push({ name, driver, address, phone, time: timeC, type: 'C' });
+        if (timeB) studentsB.push({ name, driver, address, phone, time: timeB, type: 'B' });
+      }
 
-    studentsC = [];
-    studentsB = [];
-    for (const rec of masterRecs) {
-      const f       = rec.fields;
-      const name    = cellText(f['名字']);
-      if (!name) continue;
-      const driver  = cellText(f['driver']);
-      const address = cellText(f['ADDRESS']);
-      const phone   = cellText(f['电话号码']);
-      const timeC   = cellText(f[colC]);
-      const timeB   = cellText(f[colB]);
-      if (timeC) studentsC.push({ name, driver, address, phone, time: timeC, type: 'C' });
-      if (timeB) studentsB.push({ name, driver, address, phone, time: timeB, type: 'B' });
-    }
+      const sortT = (a, b) => a.time.localeCompare(b.time);
+      studentsC.sort(sortT);
+      studentsB.sort(sortT);
 
-    const sortT = (a, b) => a.time.localeCompare(b.time);
-    studentsC.sort(sortT);
-    studentsB.sort(sortT);
+      // Load existing roll call records
+      const today = getTodayStr();
+      const allRC = await getAllRecords(CFG.ROLLCALL_TABLE);
+      rollCallMap = {};
+      for (const rec of allRC) {
+        const f = rec.fields;
+        if (cellText(f['日期']) !== today) continue;
+        const name = cellText(f['名字']);
+        const type = cellText(f['班次']);
+        const status = cellText(f['状态']) || '待确认';
+        rollCallMap[`${name}|${type}`] = { recordId: rec.record_id, status };
+      }
 
-    document.getElementById('cntC').textContent = studentsC.length;
-    document.getElementById('cntB').textContent = studentsB.length;
+      // Create missing records
+      const toCreate = [...studentsC, ...studentsB]
+        .filter(s => !rollCallMap[`${s.name}|${s.type}`]);
 
-    // 3. Load today's existing roll call records
-    const today = getTodayStr();
-    const allRC  = await getAllRecords(CFG.ROLLCALL_TABLE);
-    rollCallMap  = {};
-    for (const rec of allRC) {
-      const f = rec.fields;
-      if (cellText(f['日期']) !== today) continue;
-      const name   = cellText(f['名字']);
-      const type   = cellText(f['班次']);
-      const status = cellText(f['状态']) || '待确认';
-      rollCallMap[`${name}|${type}`] = { recordId: rec.record_id, status };
-    }
-
-    // 4. Batch-create missing records
-    const toCreate = [...studentsC, ...studentsB]
-      .filter(s => !rollCallMap[`${s.name}|${s.type}`]);
-
-    if (toCreate.length > 0) {
-      const records = toCreate.map(s => ({
-        fields: {
-          '名字': s.name, '日期': today, '班次': s.type,
-          '司机': s.driver, '时间': s.time,
-          '地址': s.address, '电话': s.phone, '状态': '待确认',
-        }
-      }));
-      for (let i = 0; i < records.length; i += 100) {
-        const d = await apiPost(
-          `bitable/v1/apps/${CFG.APP_TOKEN}/tables/${CFG.ROLLCALL_TABLE}/records/batch_create`,
-          { records: records.slice(i, i+100) }
-        );
-        if (d.code === 0 && d.data?.records) {
-          d.data.records.forEach((rec, j) => {
-            const s = toCreate[i+j];
-            rollCallMap[`${s.name}|${s.type}`] = { recordId: rec.record_id, status: '待确认' };
-          });
+      if (toCreate.length > 0) {
+        const records = toCreate.map(s => ({
+          fields: {
+            '名字': s.name, '日期': today, '班次': s.type,
+            '司机': s.driver, '时间': s.time,
+            '地址': s.address, '电话': s.phone, '状态': '待确认',
+          }
+        }));
+        for (let i = 0; i < records.length; i += 100) {
+          const d = await apiPost(
+            `bitable/v1/apps/${CFG.APP_TOKEN}/tables/${CFG.ROLLCALL_TABLE}/records/batch_create`,
+            { records: records.slice(i, i+100) }
+          );
+          if (d.code === 0 && d.data?.records) {
+            d.data.records.forEach((rec, j) => {
+              const s = toCreate[i+j];
+              rollCallMap[`${s.name}|${s.type}`] = { recordId: rec.record_id, status: '待确认' };
+            });
+          }
         }
       }
     }
+
+    document.getElementById('cntC').textContent = studentsC.length;
+    document.getElementById('cntB').textContent = studentsB.length;
 
     renderCards();
 
@@ -812,6 +853,12 @@ async function cycleStatus(name, type) {
   renderCards();
 
   if (!recId) { showToast('⚠️ 无记录ID，请刷新'); return; }
+
+  if (DEMO_MODE) {
+    // Demo mode - just show success
+    showToast(`🎭 ${name} → ${next} (演示模式)`);
+    return;
+  }
 
   try {
     const d = await apiPut(
