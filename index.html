@@ -336,6 +336,13 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica
           </div>
         </div>
         <div class="test-item">
+          <span>应用权限检查</span>
+          <div style="display:flex;gap:8px;align-items:center">
+            <button class="test-btn test-btn-secondary" onclick="testPermissions()">测试</button>
+            <span class="test-result" id="permissionResult">未测试</span>
+          </div>
+        </div>
+        <div class="test-item">
           <span>读取主表数据</span>
           <div style="display:flex;gap:8px;align-items:center">
             <button class="test-btn test-btn-secondary" onclick="testMasterTable()">测试</button>
@@ -958,14 +965,42 @@ function setTestResult(testId, result, details = '') {
 async function testApiAuth() {
   setTestResult('authResult', 'running');
   try {
-    const token = await getToken();
-    if (token && token.length > 0) {
+    // Test authentication through proxy
+    const result = await apiFetch('POST', 'auth/v3/tenant_access_token/internal');
+    if (result.code === 0) {
       setTestResult('authResult', 'pass', '认证成功，token有效');
     } else {
-      setTestResult('authResult', 'fail', '无法获取有效token');
+      setTestResult('authResult', 'fail', `认证失败: ${result.msg}`);
     }
   } catch (e) {
     setTestResult('authResult', 'fail', `认证失败: ${e.message}`);
+  }
+}
+
+async function testPermissions() {
+  setTestResult('permissionResult', 'running');
+  try {
+    // Test basic app access
+    const appInfo = await apiGet(`bitable/v1/apps/${CFG.APP_TOKEN}`);
+    if (appInfo.code !== 0) {
+      setTestResult('permissionResult', 'fail', `应用访问失败: ${appInfo.msg}`);
+      return;
+    }
+
+    // Test table listing
+    const tables = await apiGet(`bitable/v1/apps/${CFG.APP_TOKEN}/tables`);
+    if (tables.code !== 0) {
+      if (tables.msg && tables.msg.includes('permission')) {
+        setTestResult('permissionResult', 'fail', '权限不足：需要多维表格读写权限');
+      } else {
+        setTestResult('permissionResult', 'fail', `表格访问失败: ${tables.msg}`);
+      }
+      return;
+    }
+
+    setTestResult('permissionResult', 'pass', '应用权限正常');
+  } catch (e) {
+    setTestResult('permissionResult', 'fail', `权限检查失败: ${e.message}`);
   }
 }
 
