@@ -444,7 +444,7 @@ let CFG = {
 };
 
 // Demo mode for testing - simulate data
-const DEMO_MODE = true;
+const DEMO_MODE = false;
 let mockData = {
   studentsC: [
     { name: 'Alice李', driver: 'Uncle王', address: 'Jalan Bukit Bintang 123', phone: '0123456789', time: '07:30', type: 'C' },
@@ -535,27 +535,23 @@ function getDayPrefix() { return DAY_NAMES[new Date().getDay()]; }
 //  LARK API HELPERS
 // ═══════════════════════════════════════════════════
 async function getToken() {
-  if (_token && Date.now() < _tokenExp) return _token;
-  const r = await fetch(`${CFG.BASE}/auth/v3/tenant_access_token/internal`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ app_id: CFG.APP_ID, app_secret: CFG.APP_SECRET })
-  });
-  const d = await r.json();
-  if (d.code !== 0) throw new Error(`认证失败: ${d.msg}`);
-  _token    = d.tenant_access_token;
-  _tokenExp = Date.now() + (d.expire - 120) * 1000;
-  return _token;
+  // Token management is now handled by the proxy
+  return 'handled_by_proxy';
 }
 
 async function apiFetch(method, path, body) {
-  const tk   = await getToken();
+  // Use proxy to avoid CORS issues
   const opts = {
-    method,
-    headers: { Authorization: `Bearer ${tk}`, 'Content-Type': 'application/json' }
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      path: path,
+      method: method,
+      body: body
+    })
   };
-  if (body) opts.body = JSON.stringify(body);
-  const r = await fetch(`${CFG.BASE}/${path}`, opts);
+  
+  const r = await fetch('/api/proxy', opts);
   return r.json();
 }
 
