@@ -3,58 +3,95 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Uncle 载送点名</title>
+<title>UNCLE载送点名系统</title>
+
+<!-- PWA配置 -->
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="UNCLE载送">
+<link rel="apple-touch-icon" href="/icon-192.png">
+
+<!-- PWA图标 -->
+<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png">
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 body { font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica Neue', sans-serif; background: #f0f2f5; min-height: 100vh; }
 
-/* ── Header ── */
+/* ── Header (老人家友好设计) ── */
 .header {
-  background: linear-gradient(135deg, #1565c0, #1a73e8);
+  background: linear-gradient(135deg, #000000, #1a1a1a);
   color: white;
-  padding: 16px 16px 14px;
+  padding: 20px 16px 18px;
   text-align: center;
   position: sticky;
   top: 0;
   z-index: 100;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 }
-.header h1 { font-size: 20px; font-weight: 700; letter-spacing: 0.5px; }
-.header .date { font-size: 13px; opacity: 0.85; margin-top: 4px; }
+.header h1 { 
+  font-size: 28px; 
+  font-weight: 800; 
+  letter-spacing: 1px;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+}
+.header .date { 
+  font-size: 16px; 
+  opacity: 0.9; 
+  margin-top: 6px; 
+  font-weight: 600;
+}
 
-/* ── Tabs ── */
+/* ── Tabs (老人家友好大按钮) ── */
 .tabs {
   display: flex;
   background: white;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 2px solid #ddd;
   position: sticky;
-  top: 62px;
+  top: 82px;
   z-index: 99;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 .tab {
   flex: 1;
-  padding: 14px 0;
+  padding: 20px 0;
   text-align: center;
-  font-size: 16px;
-  font-weight: 600;
+  font-size: 20px;
+  font-weight: 700;
   cursor: pointer;
-  color: #888;
-  border-bottom: 3px solid transparent;
-  transition: all 0.2s;
+  color: #666;
+  border-bottom: 4px solid transparent;
+  transition: all 0.3s;
   user-select: none;
+  min-height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
-.tab.active { color: #1a73e8; border-bottom-color: #1a73e8; }
+.tab.active { 
+  color: #000; 
+  border-bottom-color: #000;
+  background: #f8f8f8;
+}
 .tab-count {
   display: inline-block;
-  background: #e0e0e0;
-  color: #555;
-  border-radius: 10px;
-  font-size: 11px;
-  padding: 1px 7px;
-  margin-left: 5px;
-  font-weight: 600;
+  background: #000;
+  color: white;
+  border-radius: 20px;
+  font-size: 16px;
+  padding: 4px 12px;
+  margin-left: 8px;
+  font-weight: 700;
+  min-width: 40px;
 }
-.tab.active .tab-count { background: #bbdefb; color: #1565c0; }
+.tab.active .tab-count { 
+  background: #000; 
+  color: #fff;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
 
 /* ── Summary bar ── */
 .summary {
@@ -78,64 +115,138 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica
 .dot-onboard { background: #4caf50; }
 .dot-absent  { background: #f44336; }
 
-/* ── Cards ── */
-.cards { padding: 12px; }
+/* ── Cards (老人家友好大卡片) ── */
+.cards { padding: 16px; }
 .card {
   background: white;
-  border-radius: 14px;
-  padding: 14px 16px;
-  margin-bottom: 12px;
-  box-shadow: 0 1px 5px rgba(0,0,0,0.08);
-  transition: box-shadow 0.2s;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  transition: box-shadow 0.3s;
+  border: 2px solid #f0f0f0;
 }
-.card:active { box-shadow: 0 2px 10px rgba(0,0,0,0.15); }
-.card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.card:active { 
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  transform: scale(0.98);
+}
+.card-top { 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: flex-start; 
+  gap: 16px; 
+}
 .card-info { flex: 1; min-width: 0; }
-.student-name { font-size: 19px; font-weight: 700; color: #1a1a1a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.student-meta { font-size: 12px; color: #999; margin-top: 3px; }
-.student-meta span { margin-right: 10px; }
-
-/* ── Status badge ── */
-.status-badge {
-  padding: 8px 16px;
-  border-radius: 20px;
-  font-size: 14px;
+.student-name { 
+  font-size: 24px; 
+  font-weight: 800; 
+  color: #000; 
+  line-height: 1.2;
+  margin-bottom: 8px;
+}
+.student-meta { 
+  font-size: 16px; 
+  color: #666; 
+  margin-top: 6px; 
+  line-height: 1.4;
+}
+.student-meta span { 
+  margin-right: 16px; 
   font-weight: 600;
+}
+
+/* ── Status Badge (老人家友好超大按钮) ── */
+.status-badge {
+  padding: 16px 24px;
+  border-radius: 30px;
+  font-size: 18px;
+  font-weight: 800;
   cursor: pointer;
   user-select: none;
   white-space: nowrap;
   flex-shrink: 0;
-  transition: transform 0.1s, opacity 0.1s;
-  border: 1.5px solid transparent;
+  transition: transform 0.2s, opacity 0.2s, box-shadow 0.2s;
+  border: 3px solid transparent;
+  min-width: 120px;
+  text-align: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
 }
-.status-badge:active { transform: scale(0.95); opacity: 0.8; }
-.status-pending { background: #fff3e0; color: #e65100; border-color: #ffb74d; }
-.status-onboard { background: #e8f5e9; color: #2e7d32; border-color: #81c784; }
-.status-absent  { background: #fce4ec; color: #c62828; border-color: #ef9a9a; }
+.status-badge:active { 
+  transform: scale(0.92); 
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+.status-pending { 
+  background: #fff3e0; 
+  color: #d84315; 
+  border-color: #ff8a65;
+  box-shadow: 0 3px 8px rgba(255,152,0,0.3);
+}
+.status-onboard { 
+  background: #e8f5e9; 
+  color: #1b5e20; 
+  border-color: #66bb6a;
+  box-shadow: 0 3px 8px rgba(76,175,80,0.3);
+}
+.status-absent { 
+  background: #fce4ec; 
+  color: #b71c1c; 
+  border-color: #ef5350;
+  box-shadow: 0 3px 8px rgba(244,67,54,0.3);
+}
 
-.card-address { font-size: 13px; color: #555; margin-top: 9px; line-height: 1.5; display: flex; align-items: flex-start; gap: 5px; }
-.card-address-icon { flex-shrink: 0; margin-top: 1px; }
+.card-address { 
+  font-size: 16px; 
+  color: #333; 
+  margin-top: 12px; 
+  line-height: 1.6; 
+  display: flex; 
+  align-items: flex-start; 
+  gap: 8px;
+  font-weight: 500;
+}
+.card-address-icon { 
+  flex-shrink: 0; 
+  margin-top: 2px; 
+  font-size: 18px;
+}
 
-/* ── Action buttons ── */
-.card-actions { display: flex; gap: 10px; margin-top: 12px; }
+/* ── Action Buttons (老人家友好大按钮) ── */
+.card-actions { 
+  display: flex; 
+  gap: 16px; 
+  margin-top: 16px; 
+}
 .btn {
   flex: 1;
-  padding: 11px 8px;
+  padding: 16px 12px;
   border: none;
-  border-radius: 10px;
-  font-size: 14px;
-  font-weight: 600;
+  border-radius: 16px;
+  font-size: 16px;
+  font-weight: 700;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 8px;
   text-decoration: none;
-  transition: opacity 0.15s;
+  transition: all 0.2s;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  min-height: 56px;
 }
-.btn:active { opacity: 0.75; }
-.btn-call { background: #e3f2fd; color: #1565c0; }
-.btn-wa   { background: #e8f5e9; color: #1b5e20; }
+.btn:active { 
+  transform: scale(0.95);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+.btn-call { 
+  background: #000; 
+  color: white;
+  border: 2px solid #000;
+}
+.btn-wa { 
+  background: #25d366; 
+  color: white;
+  border: 2px solid #25d366;
+}
 
 /* ── Loading ── */
 .loading { text-align: center; padding: 70px 20px; color: #888; }
@@ -1475,6 +1586,82 @@ async function runAllTests() {
   
   showToast(`✅ 测试完成: ${passCount}/${totalCount} 通过`);
   updateConnectionStatus(passCount === totalCount ? 'online' : 'offline');
+}
+
+// ═══════════════════════════════════════════════════
+//  PWA功能
+// ═══════════════════════════════════════════════════
+// 注册Service Worker
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(registration => {
+        console.log('🎉 UNCLE载送 PWA 安装成功!', registration.scope);
+      })
+      .catch(error => {
+        console.log('❌ PWA 安装失败:', error);
+      });
+  });
+}
+
+// PWA安装提示
+let deferredPrompt;
+const installButton = document.createElement('div');
+installButton.innerHTML = '📱 安装到手机';
+installButton.className = 'install-prompt';
+installButton.style.cssText = `
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #000;
+  color: white;
+  padding: 16px 24px;
+  border-radius: 30px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  z-index: 1000;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  display: none;
+`;
+
+document.body.appendChild(installButton);
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  installButton.style.display = 'block';
+  
+  installButton.addEventListener('click', () => {
+    installButton.style.display = 'none';
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then((choiceResult) => {
+      if (choiceResult.outcome === 'accepted') {
+        console.log('✅ 用户接受安装PWA');
+        showToast('🎉 UNCLE载送已安装到手机！');
+      }
+      deferredPrompt = null;
+    });
+  });
+});
+
+// 检测PWA是否已安装
+window.addEventListener('appinstalled', () => {
+  console.log('✅ UNCLE载送 PWA 已安装');
+  showToast('🎉 UNCLE载送安装成功！现在可以从桌面快速启动');
+  installButton.style.display = 'none';
+});
+
+// 检测是否在PWA模式下运行
+function isPWA() {
+  return window.matchMedia('(display-mode: standalone)').matches ||
+         window.navigator.standalone === true;
+}
+
+if (isPWA()) {
+  console.log('🚐 在PWA模式下运行');
+  document.body.classList.add('pwa-mode');
 }
 
 // ═══════════════════════════════════════════════════
