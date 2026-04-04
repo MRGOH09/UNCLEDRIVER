@@ -689,8 +689,14 @@ async function init() {
       
       console.log('🎭 使用演示数据');
     } else {
-      // Original API logic
-      await ensureRollCallFields();
+      // Try to ensure fields exist, but continue if it fails
+      try {
+        await ensureRollCallFields();
+        console.log('✅ 字段检查完成');
+      } catch (fieldError) {
+        console.warn('⚠️ 字段创建失败，继续使用现有表格:', fieldError.message);
+      }
+
       const colC = `${dayPrefix}(C)`;
       const colB = `${dayPrefix}(B)`;
       const masterRecs = await getAllRecords(CFG.MASTER_TABLE);
@@ -716,7 +722,13 @@ async function init() {
 
       // Load existing roll call records
       const today = getTodayStr();
-      const allRC = await getAllRecords(CFG.ROLLCALL_TABLE);
+      let allRC = [];
+      try {
+        allRC = await getAllRecords(CFG.ROLLCALL_TABLE);
+      } catch (rcError) {
+        console.warn('⚠️ 无法读取点名表记录:', rcError.message);
+      }
+      
       rollCallMap = {};
       for (const rec of allRC) {
         const f = rec.fields;
@@ -727,31 +739,13 @@ async function init() {
         rollCallMap[`${name}|${type}`] = { recordId: rec.record_id, status };
       }
 
-      // Create missing records
-      const toCreate = [...studentsC, ...studentsB]
-        .filter(s => !rollCallMap[`${s.name}|${s.type}`]);
-
-      if (toCreate.length > 0) {
-        const records = toCreate.map(s => ({
-          fields: {
-            '名字': s.name, '日期': today, '班次': s.type,
-            '司机': s.driver, '时间': s.time,
-            '地址': s.address, '电话': s.phone, '状态': '待确认',
-          }
-        }));
-        for (let i = 0; i < records.length; i += 100) {
-          const d = await apiPost(
-            `bitable/v1/apps/${CFG.APP_TOKEN}/tables/${CFG.ROLLCALL_TABLE}/records/batch_create`,
-            { records: records.slice(i, i+100) }
-          );
-          if (d.code === 0 && d.data?.records) {
-            d.data.records.forEach((rec, j) => {
-              const s = toCreate[i+j];
-              rollCallMap[`${s.name}|${s.type}`] = { recordId: rec.record_id, status: '待确认' };
-            });
-          }
+      // Initialize missing students with default status
+      [...studentsC, ...studentsB].forEach(s => {
+        const key = `${s.name}|${s.type}`;
+        if (!rollCallMap[key]) {
+          rollCallMap[key] = { recordId: `temp_${key}`, status: '待确认' };
         }
-      }
+      });
     }
 
     document.getElementById('cntC').textContent = studentsC.length;
@@ -863,17 +857,27 @@ async function cycleStatus(name, type) {
     return;
   }
 
+  // Check if this is a real record or temporary one
+  if (recId.startsWith('temp_')) {
+    showToast(`⚠️ ${name} → ${next} (仅本地，需要权限同步到飞书)`);
+    return;
+  }
+
   try {
     const d = await apiPut(
       `bitable/v1/apps/${CFG.APP_TOKEN}/tables/${CFG.ROLLCALL_TABLE}/records/${recId}`,
       { fields: { '状态': next, '点名时间': new Date().toISOString() } }
     );
     if (d.code !== 0) throw new Error(d.msg);
-    showToast(`${name} → ${next}`);
+    showToast(`✅ ${name} → ${next}`);
   } catch (e) {
-    rollCallMap[key] = { ...rollCallMap[key], status: cur };
-    renderCards();
-    showToast('❌ 保存失败，已还原');
+    if (e.message.includes('permission')) {
+      showToast(`⚠️ ${name} → ${next} (本地已更新，权限不足无法同步)`);
+    } else {
+      rollCallMap[key] = { ...rollCallMap[key], status: cur };
+      renderCards();
+      showToast('❌ 保存失败，已还原');
+    }
     console.error('Status update failed:', e);
   }
 }
