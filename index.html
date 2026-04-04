@@ -1396,11 +1396,64 @@ function switchPage(page) {
   }
 }
 
+// 当数据加载完成后，刷新当前页面内容
+function refreshCurrentPage() {
+  switch(currentPage) {
+    case 'students':
+      if (document.getElementById('studentsPage').classList.contains('active')) {
+        loadStudentsPage();
+      }
+      break;
+    case 'data':
+      if (document.getElementById('dataPage').classList.contains('active')) {
+        loadDataPage();
+      }
+      break;
+    case 'settings':
+      if (document.getElementById('settingsPage').classList.contains('active')) {
+        loadSettingsPage();
+      }
+      break;
+  }
+}
+
 // ═══════════════════════════════════════════════════
 //  STUDENTS PAGE
 // ═══════════════════════════════════════════════════
 function loadStudentsPage() {
   const content = document.getElementById('studentsContent');
+  
+  // 检查数据是否已加载
+  if (!studentsC.length && !studentsB.length) {
+    content.innerHTML = `
+      <div class="page-header">
+        <h2>📋 学生名单管理</h2>
+        <p>查看和管理所有学生信息</p>
+      </div>
+      
+      <div class="loading">
+        <div class="spinner"></div>
+        <div class="loading-text">正在加载学生数据...</div>
+      </div>
+    `;
+    
+    // 如果数据未加载，等待主数据加载完成后再渲染
+    const checkData = setInterval(() => {
+      if (studentsC.length > 0 || studentsB.length > 0) {
+        clearInterval(checkData);
+        renderStudentsPageContent();
+      }
+    }, 100);
+    
+    return;
+  }
+  
+  renderStudentsPageContent();
+}
+
+function renderStudentsPageContent() {
+  const content = document.getElementById('studentsContent');
+  const totalStudents = studentsC.length + studentsB.length;
   
   content.innerHTML = `
     <div class="page-header">
@@ -1410,7 +1463,7 @@ function loadStudentsPage() {
     
     <div class="filter-tabs">
       <div class="filter-tab active" onclick="filterStudentsList('all')">
-        全部学生 <span class="badge">${studentsC.length + studentsB.length}</span>
+        全部学生 <span class="badge">${totalStudents}</span>
       </div>
       <div class="filter-tab" onclick="filterStudentsList('pickup')">
         来接学生 <span class="badge">${studentsC.length}</span>
@@ -1434,29 +1487,38 @@ function filterStudentsList(type) {
 }
 
 function renderStudentsList(type) {
+  // 安全检查：确保数组存在
+  const safeStudentsC = studentsC || [];
+  const safeStudentsB = studentsB || [];
+  
   let students = [];
   
   switch(type) {
     case 'all':
-      students = [...studentsC, ...studentsB];
+      students = [...safeStudentsC, ...safeStudentsB];
       break;
     case 'pickup':
-      students = studentsC;
+      students = safeStudentsC;
       break;
     case 'dropoff':
-      students = studentsB;
+      students = safeStudentsB;
       break;
   }
   
-  // 按司机和时间分组
-  const filtered = filterStudentsByUncle(students);
+  // 如果没有选择Uncle，显示所有学生（不过滤）
+  const currentUncle = localStorage.getItem('selectedUncle');
+  const filtered = currentUncle ? filterStudentsByUncle(students) : students;
   
   if (filtered.length === 0) {
+    const reason = !currentUncle ? '请先在设置中选择Uncle身份' : 
+                   students.length === 0 ? '暂无学生数据' : '当前Uncle没有负责的学生';
+    
     return `
-      <div class="empty-state">
+      <div class="empty-state" style="text-align: center; padding: 40px 20px; color: #bbb;">
         <div style="font-size: 48px; margin-bottom: 16px;">📭</div>
-        <h3>暂无学生数据</h3>
-        <p>当前筛选条件下没有找到学生</p>
+        <h3 style="color: #fff; margin-bottom: 8px;">暂无数据</h3>
+        <p style="margin: 0;">${reason}</p>
+        ${!currentUncle ? `<button onclick="switchUncle()" class="btn-primary" style="margin-top: 16px;">选择Uncle身份</button>` : ''}
       </div>
     `;
   }
@@ -1466,7 +1528,7 @@ function renderStudentsList(type) {
       ${filtered.map(student => `
         <div class="student-card">
           <div class="student-header">
-            <h3>${esc(student.name)}</h3>
+            <h3>${esc(student.name || '未知姓名')}</h3>
             <span class="student-type ${student.type === 'C' ? 'pickup' : 'dropoff'}">
               ${student.type === 'C' ? '🌅 来接' : '🏠 送回'}
             </span>
@@ -1475,12 +1537,12 @@ function renderStudentsList(type) {
           <div class="student-details">
             <div class="detail-row">
               <span class="detail-icon">⏰</span>
-              <span class="detail-text">${esc(student.time)}</span>
+              <span class="detail-text">${esc(student.time || '暂无时间')}</span>
             </div>
             
             <div class="detail-row">
               <span class="detail-icon">🚗</span>
-              <span class="detail-text">${esc(student.driver)}</span>
+              <span class="detail-text">${esc(student.driver || '暂无司机')}</span>
             </div>
             
             <div class="detail-row">
@@ -1502,7 +1564,11 @@ function renderStudentsList(type) {
               <a href="${waLink(student.phone)}" class="action-btn whatsapp" target="_blank">
                 💬 WhatsApp
               </a>
-            ` : ''}
+            ` : `
+              <div style="text-align: center; color: #666; font-size: 14px; padding: 10px;">
+                暂无联系方式
+              </div>
+            `}
           </div>
         </div>
       `).join('')}
@@ -1514,6 +1580,37 @@ function renderStudentsList(type) {
 //  DATA PAGE  
 // ═══════════════════════════════════════════════════
 function loadDataPage() {
+  const content = document.getElementById('dataContent');
+  
+  // 检查数据是否已加载
+  if (!studentsC.length && !studentsB.length) {
+    content.innerHTML = `
+      <div class="page-header">
+        <h2>📊 数据统计报表</h2>
+        <p>分析点名数据和出勤率</p>
+      </div>
+      
+      <div class="loading">
+        <div class="spinner"></div>
+        <div class="loading-text">正在加载统计数据...</div>
+      </div>
+    `;
+    
+    // 等待数据加载完成
+    const checkData = setInterval(() => {
+      if (studentsC.length > 0 || studentsB.length > 0) {
+        clearInterval(checkData);
+        renderDataPageContent();
+      }
+    }, 100);
+    
+    return;
+  }
+  
+  renderDataPageContent();
+}
+
+function renderDataPageContent() {
   const content = document.getElementById('dataContent');
   
   content.innerHTML = `
@@ -1541,9 +1638,14 @@ function loadDataPage() {
 }
 
 function renderStatsCards() {
+  // 安全获取数据
+  const safeStudentsC = studentsC || [];
+  const safeStudentsB = studentsB || [];
+  
   const today = new Date().toLocaleDateString('zh-CN');
-  const totalStudents = studentsC.length + studentsB.length;
-  const uncleStudents = filterStudentsByUncle([...studentsC, ...studentsB]).length;
+  const totalStudents = safeStudentsC.length + safeStudentsB.length;
+  const allStudents = [...safeStudentsC, ...safeStudentsB];
+  const uncleStudents = totalStudents > 0 ? filterStudentsByUncle(allStudents).length : 0;
   
   return `
     <div class="stat-card">
@@ -2037,6 +2139,9 @@ async function init() {
     }
 
     renderCards();
+    
+    // 数据加载完成后，刷新当前页面内容
+    refreshCurrentPage();
 
   } catch (e) {
     document.getElementById('content').innerHTML = `
