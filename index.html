@@ -278,6 +278,67 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica
 .test-pass { background: #e8f5e9; color: #2e7d32; }
 .test-fail { background: #fce4ec; color: #c62828; }
 .test-running { background: #fff3e0; color: #e65100; }
+
+/* ── Uncle Info ── */
+.uncle-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  margin-top: 4px;
+}
+.uncle-name {
+  background: rgba(255,255,255,0.2);
+  padding: 2px 8px;
+  border-radius: 8px;
+  font-weight: 600;
+}
+.uncle-switch {
+  background: rgba(255,255,255,0.3);
+  border: none;
+  color: white;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  cursor: pointer;
+  font-weight: 600;
+}
+.uncle-switch:active { opacity: 0.7; }
+
+/* ── Uncle Selection Modal ── */
+.uncle-modal {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 2000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+.uncle-modal-content {
+  background: white;
+  padding: 24px;
+  border-radius: 16px;
+  margin: 20px;
+  max-width: 400px;
+  width: 100%;
+}
+.uncle-modal h3 { font-size: 18px; margin-bottom: 16px; text-align: center; }
+.uncle-list {
+  display: grid;
+  gap: 12px;
+}
+.uncle-option {
+  padding: 16px;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  cursor: pointer;
+  text-align: center;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+.uncle-option:hover { border-color: #1a73e8; background: #f8f9fa; }
+.uncle-option.active { border-color: #1a73e8; background: #e3f2fd; color: #1a73e8; }
 </style>
 </head>
 <body>
@@ -285,6 +346,10 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica
 <div class="header">
   <h1>🚐 Uncle 载送点名</h1>
   <div class="date" id="headerDate">-</div>
+  <div class="uncle-info" id="uncleInfo" style="display:none">
+    <span class="uncle-name" id="uncleName">-</span>
+    <button class="uncle-switch" onclick="switchUncle()">切换</button>
+  </div>
   <div class="status-indicator" id="connectionStatus" style="display:none"></div>
 </div>
 
@@ -317,6 +382,16 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica
 </button>
 
 <div id="toast"></div>
+
+<!-- Uncle Selection Modal -->
+<div class="uncle-modal" id="uncleModal">
+  <div class="uncle-modal-content">
+    <h3>🚐 选择你的Uncle身份</h3>
+    <div class="uncle-list" id="uncleList">
+      <!-- Uncle options will be populated here -->
+    </div>
+  </div>
+</div>
 
 <!-- Test Panel -->
 <div class="test-panel" id="testPanel">
@@ -520,6 +595,8 @@ let activeTab = 'C';
 let studentsC  = [];
 let studentsB  = [];
 let rollCallMap = {};
+let currentUncle = null;
+let allUncles = [];
 
 // ═══════════════════════════════════════════════════
 //  DATE HELPERS
@@ -537,6 +614,85 @@ function getTodayDisplay() {
 }
 
 function getDayPrefix() { return DAY_NAMES[new Date().getDay()]; }
+
+// ═══════════════════════════════════════════════════
+//  UNCLE MANAGEMENT
+// ═══════════════════════════════════════════════════
+function initUncleSelection() {
+  const savedUncle = localStorage.getItem('selectedUncle');
+  if (savedUncle) {
+    currentUncle = savedUncle;
+    updateUncleDisplay();
+  } else {
+    showUncleModal();
+  }
+}
+
+function showUncleModal() {
+  document.getElementById('uncleModal').style.display = 'flex';
+  populateUncleList();
+}
+
+function hideUncleModal() {
+  document.getElementById('uncleModal').style.display = 'none';
+}
+
+function populateUncleList() {
+  const uncleList = document.getElementById('uncleList');
+  
+  // Extract unique drivers from current data or use predefined list
+  const drivers = [...new Set([...studentsC, ...studentsB].map(s => s.driver).filter(d => d))];
+  
+  if (drivers.length === 0) {
+    // Fallback list if no data loaded yet
+    allUncles = ['A.HO', 'A.LEE', 'KOH', 'SIEK', 'CHAN', 'CHIA', 'LEE', 'SAZALI'];
+  } else {
+    allUncles = [...new Set(drivers)].sort();
+  }
+  
+  uncleList.innerHTML = allUncles.map(uncle => `
+    <div class="uncle-option" onclick="selectUncle('${escA(uncle)}')">
+      🚐 ${esc(uncle)}
+    </div>
+  `).join('');
+}
+
+function selectUncle(uncle) {
+  currentUncle = uncle;
+  localStorage.setItem('selectedUncle', uncle);
+  updateUncleDisplay();
+  hideUncleModal();
+  
+  // Update counts for current uncle
+  const filteredC = filterStudentsByUncle(studentsC);
+  const filteredB = filterStudentsByUncle(studentsB);
+  document.getElementById('cntC').textContent = filteredC.length;
+  document.getElementById('cntB').textContent = filteredB.length;
+  
+  renderCards(); // Re-render with filtered data
+  showToast(`已切换到 ${uncle} 的学生列表 (来接:${filteredC.length}, 送回:${filteredB.length})`);
+}
+
+function switchUncle() {
+  showUncleModal();
+}
+
+function updateUncleDisplay() {
+  const uncleInfo = document.getElementById('uncleInfo');
+  const uncleName = document.getElementById('uncleName');
+  
+  if (currentUncle) {
+    uncleName.textContent = `🚐 ${currentUncle}`;
+    uncleInfo.style.display = 'flex';
+  } else {
+    uncleInfo.style.display = 'none';
+  }
+}
+
+function filterStudentsByUncle(students) {
+  if (!currentUncle) return students;
+  return students.filter(s => s.driver === currentUncle);
+}
 
 // ═══════════════════════════════════════════════════
 //  LARK API HELPERS
@@ -748,8 +904,16 @@ async function init() {
       });
     }
 
+    // Initialize counts (will be updated after Uncle selection)
     document.getElementById('cntC').textContent = studentsC.length;
     document.getElementById('cntB').textContent = studentsB.length;
+
+    // Initialize Uncle selection after data is loaded
+    if (!currentUncle) {
+      initUncleSelection();
+    } else {
+      updateUncleDisplay();
+    }
 
     renderCards();
 
@@ -770,7 +934,8 @@ async function init() {
 //  RENDER
 // ═══════════════════════════════════════════════════
 function renderCards() {
-  const students = activeTab === 'C' ? studentsC : studentsB;
+  const allStudents = activeTab === 'C' ? studentsC : studentsB;
+  const students = filterStudentsByUncle(allStudents);
   const label    = activeTab === 'C' ? '来接' : '送回';
 
   let onboard = 0, absent = 0, pending = 0;
@@ -837,6 +1002,61 @@ function renderCards() {
 }
 
 // ═══════════════════════════════════════════════════
+//  ROLL CALL RECORD CREATION
+// ═══════════════════════════════════════════════════
+async function createRollCallRecord(name, type, status) {
+  const key = `${name}|${type}`;
+  const student = [...studentsC, ...studentsB].find(s => s.name === name && s.type === type);
+  
+  if (!student) {
+    showToast('❌ 找不到学生信息');
+    return;
+  }
+
+  const today = getTodayStr();
+  const now = new Date().toISOString();
+  
+  const recordData = {
+    fields: {
+      '名字': student.name,
+      '日期': today,
+      '班次': student.type,
+      '司机': student.driver || currentUncle,
+      '时间': student.time,
+      '地址': student.address,
+      '电话': student.phone,
+      '状态': status,
+      '点名时间': now
+    }
+  };
+
+  try {
+    const result = await apiPost(
+      `bitable/v1/apps/${CFG.APP_TOKEN}/tables/${CFG.ROLLCALL_TABLE}/records`,
+      recordData
+    );
+
+    if (result.code === 0 && result.data?.record) {
+      // Update local map with real record ID
+      rollCallMap[key] = { 
+        recordId: result.data.record.record_id, 
+        status: status 
+      };
+      
+      showToast(`✅ ${name} → ${status} (已同步到飞书)`);
+      renderCards(); // Re-render to show updated state
+    } else {
+      throw new Error(result.msg || '创建记录失败');
+    }
+  } catch (error) {
+    console.error('创建点名记录失败:', error);
+    
+    // Fallback: keep local state
+    showToast(`⚠️ ${name} → ${status} (本地已更新，同步失败: ${error.message})`);
+  }
+}
+
+// ═══════════════════════════════════════════════════
 //  STATUS CYCLE
 // ═══════════════════════════════════════════════════
 async function cycleStatus(name, type) {
@@ -857,9 +1077,9 @@ async function cycleStatus(name, type) {
     return;
   }
 
-  // Check if this is a real record or temporary one
+  // If this is a temporary record, create it in Lark first
   if (recId.startsWith('temp_')) {
-    showToast(`⚠️ ${name} → ${next} (仅本地，需要权限同步到飞书)`);
+    await createRollCallRecord(name, type, next);
     return;
   }
 
