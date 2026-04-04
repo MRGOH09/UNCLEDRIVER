@@ -434,14 +434,42 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica
 // ═══════════════════════════════════════════════════
 //  CONFIG
 // ═══════════════════════════════════════════════════
-const CFG = {
-  APP_ID:         'cli_a945f55fcb789e15',
-  APP_SECRET:     'VIQRln9sTOss61v8EgtK6cWK55NHuf6A',
-  APP_TOKEN:      'U6v3bat8ya7zC4seMZhj4yFVpAe',
-  MASTER_TABLE:   'tbl5TqclpTe3eaXf',
-  ROLLCALL_TABLE: 'tblAuvKa4klEnsx1',
+let CFG = {
+  APP_ID:         '',
+  APP_SECRET:     '',
+  APP_TOKEN:      '',
+  MASTER_TABLE:   '',
+  ROLLCALL_TABLE: '',
   BASE:           'https://open.larksuite.com/open-apis',
 };
+
+// Load configuration from server
+async function loadConfig() {
+  try {
+    const response = await fetch('/api/config');
+    if (response.ok) {
+      const config = await response.json();
+      CFG = { ...CFG, ...config };
+      console.log('✅ 配置加载成功');
+    } else {
+      throw new Error('配置加载失败');
+    }
+  } catch (error) {
+    console.error('❌ 无法加载配置:', error);
+    // 备用配置 (仅用于本地测试)
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      CFG = {
+        APP_ID:         'cli_a945f55fcb789e15',
+        APP_SECRET:     'VIQRln9sTOss61v8EgtK6cWK55NHuf6A',
+        APP_TOKEN:      'U6v3bat8ya7zC4seMZhj4yFVpAe',
+        MASTER_TABLE:   'tbl5TqclpTe3eaXf',
+        ROLLCALL_TABLE: 'tblAuvKa4klEnsx1',
+        BASE:           'https://open.larksuite.com/open-apis',
+      };
+      console.log('🔧 使用本地测试配置');
+    }
+  }
+}
 
 const DAY_NAMES    = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
 const CN_DAYS      = ['日','一','二','三','四','五','六'];
@@ -590,6 +618,9 @@ function telLink(phone) {
 //  MAIN INIT
 // ═══════════════════════════════════════════════════
 async function init() {
+  // 首先加载配置
+  await loadConfig();
+  
   const dayPrefix = getDayPrefix();
   document.getElementById('headerDate').textContent = getTodayDisplay();
 
