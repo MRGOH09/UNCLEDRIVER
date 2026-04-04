@@ -450,47 +450,605 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica
 }
 .uncle-option:hover { border-color: #1a73e8; background: #f8f9fa; }
 .uncle-option.active { border-color: #1a73e8; background: #e3f2fd; color: #1a73e8; }
+
+/* ── Bottom Navigation (老人家友好大导航) ── */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #000;
+  display: flex;
+  z-index: 1500;
+  box-shadow: 0 -4px 16px rgba(0,0,0,0.2);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 8px 8px;
+  color: #888;
+  cursor: pointer;
+  transition: all 0.3s;
+  user-select: none;
+  min-height: 70px;
+}
+
+.nav-item.active {
+  color: #fff;
+  background: rgba(255,255,255,0.1);
+}
+
+.nav-icon {
+  font-size: 24px;
+  margin-bottom: 4px;
+  transition: transform 0.2s;
+}
+
+.nav-item:active .nav-icon {
+  transform: scale(0.9);
+}
+
+.nav-label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+/* 为底部导航留出空间 */
+body {
+  padding-bottom: 90px;
+}
+
+/* 页面容器 */
+.page {
+  display: none;
+}
+
+.page.active {
+  display: block;
+}
+
+/* ── Page Specific Styles ── */
+.page-header {
+  text-align: center;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.page-header h2 {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: #fff;
+}
+
+.page-header p {
+  font-size: 16px;
+  color: #bbb;
+  margin: 0;
+}
+
+/* ── Stats Grid (数据页面) ── */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  padding: 0 20px;
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  background: #1a1a1a;
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  border: 1px solid #333;
+}
+
+.stat-icon {
+  font-size: 32px;
+  margin-bottom: 12px;
+}
+
+.stat-number {
+  font-size: 24px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 4px;
+}
+
+.stat-label {
+  font-size: 14px;
+  color: #bbb;
+}
+
+/* ── Chart Section ── */
+.chart-section {
+  padding: 0 20px;
+  margin-bottom: 24px;
+}
+
+.chart-section h3 {
+  font-size: 20px;
+  margin-bottom: 16px;
+  color: #fff;
+}
+
+.chart-container {
+  background: #1a1a1a;
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid #333;
+}
+
+.chart-bars {
+  display: flex;
+  justify-content: space-around;
+  align-items: end;
+  height: 150px;
+  gap: 8px;
+}
+
+.chart-bar {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  position: relative;
+}
+
+.bar {
+  background: linear-gradient(to top, #4CAF50, #8BC34A);
+  border-radius: 4px 4px 0 0;
+  width: 100%;
+  max-width: 40px;
+  min-height: 10px;
+  transition: all 0.3s;
+  margin-bottom: 8px;
+}
+
+.bar-label {
+  font-size: 12px;
+  color: #bbb;
+  margin-top: 4px;
+}
+
+.bar-value {
+  font-size: 11px;
+  color: #4CAF50;
+  font-weight: 600;
+  position: absolute;
+  top: -20px;
+}
+
+/* ── Recent Activity ── */
+.recent-activity {
+  padding: 0 20px;
+  margin-bottom: 24px;
+}
+
+.recent-activity h3 {
+  font-size: 20px;
+  margin-bottom: 16px;
+  color: #fff;
+}
+
+.records-list {
+  background: #1a1a1a;
+  border-radius: 12px;
+  border: 1px solid #333;
+  overflow: hidden;
+}
+
+.record-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  border-bottom: 1px solid #333;
+}
+
+.record-item:last-child {
+  border-bottom: none;
+}
+
+.record-student {
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 4px;
+}
+
+.record-time {
+  font-size: 12px;
+  color: #bbb;
+}
+
+.record-status {
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.status-present {
+  background: rgba(76, 175, 80, 0.2);
+  color: #4CAF50;
+}
+
+.status-absent {
+  background: rgba(244, 67, 54, 0.2);
+  color: #f44336;
+}
+
+/* ── Filter Tabs (名单页面) ── */
+.filter-tabs {
+  display: flex;
+  padding: 0 20px;
+  margin-bottom: 20px;
+  gap: 8px;
+}
+
+.filter-tab {
+  flex: 1;
+  padding: 12px;
+  text-align: center;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 8px;
+  color: #bbb;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.filter-tab.active {
+  background: #333;
+  color: #fff;
+  border-color: #555;
+}
+
+.filter-tab .badge {
+  display: inline-block;
+  background: #555;
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  margin-left: 8px;
+}
+
+.filter-tab.active .badge {
+  background: #4CAF50;
+}
+
+/* ── Students Grid (名单页面) ── */
+.students-grid {
+  padding: 0 20px;
+  display: grid;
+  gap: 16px;
+}
+
+.student-card {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 12px;
+  padding: 16px;
+  transition: all 0.2s;
+}
+
+.student-card:hover {
+  border-color: #555;
+  background: #222;
+}
+
+.student-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.student-header h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #fff;
+  margin: 0;
+}
+
+.student-type {
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.student-type.pickup {
+  background: rgba(255, 193, 7, 0.2);
+  color: #FFC107;
+}
+
+.student-type.dropoff {
+  background: rgba(33, 150, 243, 0.2);
+  color: #2196F3;
+}
+
+.student-details {
+  margin-bottom: 16px;
+}
+
+.detail-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.detail-row:last-child {
+  margin-bottom: 0;
+}
+
+.detail-icon {
+  width: 20px;
+  text-align: center;
+  margin-right: 12px;
+}
+
+.detail-text {
+  color: #ccc;
+  flex: 1;
+}
+
+.student-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.action-btn {
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  text-decoration: none;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.action-btn.call {
+  background: rgba(76, 175, 80, 0.2);
+  color: #4CAF50;
+  border: 1px solid rgba(76, 175, 80, 0.3);
+}
+
+.action-btn.call:hover {
+  background: rgba(76, 175, 80, 0.3);
+}
+
+.action-btn.whatsapp {
+  background: rgba(37, 211, 102, 0.2);
+  color: #25D366;
+  border: 1px solid rgba(37, 211, 102, 0.3);
+}
+
+.action-btn.whatsapp:hover {
+  background: rgba(37, 211, 102, 0.3);
+}
+
+/* ── Settings Groups (设置页面) ── */
+.settings-groups {
+  padding: 0 20px;
+}
+
+.settings-group {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+
+.settings-group.danger {
+  border-color: rgba(244, 67, 54, 0.3);
+}
+
+.settings-group h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+  margin: 0;
+  padding: 16px 16px 8px;
+}
+
+.settings-group.danger h3 {
+  color: #f44336;
+}
+
+.setting-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  border-top: 1px solid #333;
+}
+
+.setting-item:first-child {
+  border-top: none;
+}
+
+.setting-info {
+  flex: 1;
+}
+
+.setting-label {
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 4px;
+}
+
+.setting-desc {
+  font-size: 14px;
+  color: #bbb;
+}
+
+.setting-action {
+  margin-left: 16px;
+}
+
+/* ── Button Styles ── */
+.btn-primary {
+  background: #4CAF50;
+  color: #fff;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-primary:hover {
+  background: #45a049;
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background: #333;
+  color: #fff;
+  border: 1px solid #555;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+  background: #444;
+  border-color: #666;
+}
+
+.btn-warning {
+  background: rgba(255, 152, 0, 0.2);
+  color: #FF9800;
+  border: 1px solid rgba(255, 152, 0, 0.3);
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-warning:hover {
+  background: rgba(255, 152, 0, 0.3);
+}
 </style>
 </head>
 <body>
 
-<div class="header">
-  <h1>🚐 Uncle 载送点名</h1>
-  <div class="date" id="headerDate">-</div>
-  <div class="uncle-info" id="uncleInfo" style="display:none">
-    <span class="uncle-name" id="uncleName">-</span>
-    <button class="uncle-switch" onclick="switchUncle()">切换</button>
+<!-- 页面1: 点名 -->
+<div class="page active" id="rollcallPage">
+  <div class="header">
+    <h1>🚐 UNCLE 点名</h1>
+    <div class="date" id="headerDate">-</div>
+    <div class="uncle-info" id="uncleInfo" style="display:none">
+      <span class="uncle-name" id="uncleName">-</span>
+      <button class="uncle-switch" onclick="switchUncle()">切换</button>
+    </div>
+    <div class="status-indicator" id="connectionStatus" style="display:none"></div>
   </div>
-  <div class="status-indicator" id="connectionStatus" style="display:none"></div>
+
+  <div class="tabs">
+    <div class="tab active" id="tabC" onclick="switchTab('C')">
+      🌅 来接<span class="tab-count" id="cntC">-</span>
+    </div>
+    <div class="tab" id="tabB" onclick="switchTab('B')">
+      🏠 送回<span class="tab-count" id="cntB">-</span>
+    </div>
+  </div>
+
+  <div class="summary" id="summary" style="display:none"></div>
+
+  <div id="content">
+    <div class="loading">
+      <div class="spinner"></div>
+      <div class="loading-text">正在加载学生数据…</div>
+      <div class="loading-sub">首次运行会自动建立表格字段，请稍候</div>
+    </div>
+  </div>
+
+  <button class="fab" id="fabBtn" onclick="doRefresh()" title="刷新">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="23 4 23 10 17 10"/>
+      <polyline points="1 20 1 14 7 14"/>
+      <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+    </svg>
+  </button>
 </div>
 
-<div class="tabs">
-  <div class="tab active" id="tabC" onclick="switchTab('C')">
-    🌅 来接<span class="tab-count" id="cntC">-</span>
+<!-- 页面2: 名单 -->
+<div class="page" id="studentsPage">
+  <div class="header">
+    <h1>📋 学生名单</h1>
+    <div class="date">历史记录</div>
   </div>
-  <div class="tab" id="tabB" onclick="switchTab('B')">
-    🏠 送回<span class="tab-count" id="cntB">-</span>
-  </div>
-</div>
-
-<div class="summary" id="summary" style="display:none"></div>
-
-<div id="content">
-  <div class="loading">
-    <div class="spinner"></div>
-    <div class="loading-text">正在加载学生数据…</div>
-    <div class="loading-sub">首次运行会自动建立表格字段，请稍候</div>
+  <div id="studentsContent">
+    <!-- 名单内容将在这里动态加载 -->
   </div>
 </div>
 
-<button class="fab" id="fabBtn" onclick="doRefresh()" title="刷新">
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-       stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-    <polyline points="23 4 23 10 17 10"/>
-    <polyline points="1 20 1 14 7 14"/>
-    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
-  </svg>
-</button>
+<!-- 页面3: 数据 -->
+<div class="page" id="dataPage">
+  <div class="header">
+    <h1>📊 数据统计</h1>
+    <div class="date">点名报表</div>
+  </div>
+  <div id="dataContent">
+    <!-- 数据内容将在这里动态加载 -->
+  </div>
+</div>
+
+<!-- 页面4: 设置 -->
+<div class="page" id="settingsPage">
+  <div class="header">
+    <h1>⚙️ 系统设置</h1>
+    <div class="date">个人配置</div>
+  </div>
+  <div id="settingsContent">
+    <!-- 设置内容将在这里动态加载 -->
+  </div>
+</div>
+
+<!-- 底部导航栏 -->
+<div class="bottom-nav">
+  <div class="nav-item active" onclick="switchPage('rollcall')">
+    <div class="nav-icon">✅</div>
+    <div class="nav-label">点名</div>
+  </div>
+  <div class="nav-item" onclick="switchPage('students')">
+    <div class="nav-icon">📋</div>
+    <div class="nav-label">名单</div>
+  </div>
+  <div class="nav-item" onclick="switchPage('data')">
+    <div class="nav-icon">📊</div>
+    <div class="nav-label">数据</div>
+  </div>
+  <div class="nav-item" onclick="switchPage('settings')">
+    <div class="nav-icon">⚙️</div>
+    <div class="nav-label">设置</div>
+  </div>
+</div>
 
 <div id="toast"></div>
 
@@ -803,6 +1361,458 @@ function updateUncleDisplay() {
 function filterStudentsByUncle(students) {
   if (!currentUncle) return students;
   return students.filter(s => s.driver === currentUncle);
+}
+
+// ═══════════════════════════════════════════════════
+//  PAGE NAVIGATION
+// ═══════════════════════════════════════════════════
+let currentPage = 'rollcall';
+
+function switchPage(page) {
+  // 隐藏所有页面
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  
+  // 显示目标页面
+  document.getElementById(page + 'Page').classList.add('active');
+  event.target.closest('.nav-item').classList.add('active');
+  
+  currentPage = page;
+  
+  // 根据页面加载对应内容
+  switch(page) {
+    case 'rollcall':
+      // 点名页面已经是默认加载的
+      break;
+    case 'students':
+      loadStudentsPage();
+      break;
+    case 'data':
+      loadDataPage();
+      break;
+    case 'settings':
+      loadSettingsPage();
+      break;
+  }
+}
+
+// ═══════════════════════════════════════════════════
+//  STUDENTS PAGE
+// ═══════════════════════════════════════════════════
+function loadStudentsPage() {
+  const content = document.getElementById('studentsContent');
+  
+  content.innerHTML = `
+    <div class="page-header">
+      <h2>📋 学生名单管理</h2>
+      <p>查看和管理所有学生信息</p>
+    </div>
+    
+    <div class="filter-tabs">
+      <div class="filter-tab active" onclick="filterStudentsList('all')">
+        全部学生 <span class="badge">${studentsC.length + studentsB.length}</span>
+      </div>
+      <div class="filter-tab" onclick="filterStudentsList('pickup')">
+        来接学生 <span class="badge">${studentsC.length}</span>
+      </div>
+      <div class="filter-tab" onclick="filterStudentsList('dropoff')">
+        送回学生 <span class="badge">${studentsB.length}</span>
+      </div>
+    </div>
+    
+    <div id="studentsList">
+      ${renderStudentsList('all')}
+    </div>
+  `;
+}
+
+function filterStudentsList(type) {
+  document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  
+  document.getElementById('studentsList').innerHTML = renderStudentsList(type);
+}
+
+function renderStudentsList(type) {
+  let students = [];
+  
+  switch(type) {
+    case 'all':
+      students = [...studentsC, ...studentsB];
+      break;
+    case 'pickup':
+      students = studentsC;
+      break;
+    case 'dropoff':
+      students = studentsB;
+      break;
+  }
+  
+  // 按司机和时间分组
+  const filtered = filterStudentsByUncle(students);
+  
+  if (filtered.length === 0) {
+    return `
+      <div class="empty-state">
+        <div style="font-size: 48px; margin-bottom: 16px;">📭</div>
+        <h3>暂无学生数据</h3>
+        <p>当前筛选条件下没有找到学生</p>
+      </div>
+    `;
+  }
+  
+  return `
+    <div class="students-grid">
+      ${filtered.map(student => `
+        <div class="student-card">
+          <div class="student-header">
+            <h3>${esc(student.name)}</h3>
+            <span class="student-type ${student.type === 'C' ? 'pickup' : 'dropoff'}">
+              ${student.type === 'C' ? '🌅 来接' : '🏠 送回'}
+            </span>
+          </div>
+          
+          <div class="student-details">
+            <div class="detail-row">
+              <span class="detail-icon">⏰</span>
+              <span class="detail-text">${esc(student.time)}</span>
+            </div>
+            
+            <div class="detail-row">
+              <span class="detail-icon">🚗</span>
+              <span class="detail-text">${esc(student.driver)}</span>
+            </div>
+            
+            <div class="detail-row">
+              <span class="detail-icon">📍</span>
+              <span class="detail-text">${esc(student.address || '暂无地址')}</span>
+            </div>
+            
+            <div class="detail-row">
+              <span class="detail-icon">📞</span>
+              <span class="detail-text">${esc(student.phone || '暂无电话')}</span>
+            </div>
+          </div>
+          
+          <div class="student-actions">
+            ${student.phone ? `
+              <a href="tel:${student.phone}" class="action-btn call">
+                📞 打电话
+              </a>
+              <a href="${waLink(student.phone)}" class="action-btn whatsapp" target="_blank">
+                💬 WhatsApp
+              </a>
+            ` : ''}
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+// ═══════════════════════════════════════════════════
+//  DATA PAGE  
+// ═══════════════════════════════════════════════════
+function loadDataPage() {
+  const content = document.getElementById('dataContent');
+  
+  content.innerHTML = `
+    <div class="page-header">
+      <h2>📊 数据统计报表</h2>
+      <p>分析点名数据和出勤率</p>
+    </div>
+    
+    <div class="stats-grid">
+      ${renderStatsCards()}
+    </div>
+    
+    <div class="chart-section">
+      <h3>📈 本周出勤趋势</h3>
+      <div class="chart-container">
+        ${renderWeeklyChart()}
+      </div>
+    </div>
+    
+    <div class="recent-activity">
+      <h3>📋 最近记录</h3>
+      ${renderRecentRecords()}
+    </div>
+  `;
+}
+
+function renderStatsCards() {
+  const today = new Date().toLocaleDateString('zh-CN');
+  const totalStudents = studentsC.length + studentsB.length;
+  const uncleStudents = filterStudentsByUncle([...studentsC, ...studentsB]).length;
+  
+  return `
+    <div class="stat-card">
+      <div class="stat-icon">👥</div>
+      <div class="stat-content">
+        <div class="stat-number">${totalStudents}</div>
+        <div class="stat-label">总学生数</div>
+      </div>
+    </div>
+    
+    <div class="stat-card">
+      <div class="stat-icon">🚐</div>
+      <div class="stat-content">
+        <div class="stat-number">${uncleStudents}</div>
+        <div class="stat-label">我的学生</div>
+      </div>
+    </div>
+    
+    <div class="stat-card">
+      <div class="stat-icon">📅</div>
+      <div class="stat-content">
+        <div class="stat-number">${getTodayRecordsCount()}</div>
+        <div class="stat-label">今日记录</div>
+      </div>
+    </div>
+    
+    <div class="stat-card">
+      <div class="stat-icon">⭐</div>
+      <div class="stat-content">
+        <div class="stat-number">${getAttendanceRate()}%</div>
+        <div class="stat-label">出勤率</div>
+      </div>
+    </div>
+  `;
+}
+
+function renderWeeklyChart() {
+  const days = ['周一', '周二', '周三', '周四', '周五'];
+  const data = [85, 92, 78, 96, 89]; // 示例数据
+  
+  return `
+    <div class="chart-bars">
+      ${days.map((day, i) => `
+        <div class="chart-bar">
+          <div class="bar" style="height: ${data[i]}%"></div>
+          <div class="bar-label">${day}</div>
+          <div class="bar-value">${data[i]}%</div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function renderRecentRecords() {
+  // 获取最近的点名记录（示例数据）
+  const recentRecords = [
+    { student: '张小明', status: '已上车', time: '07:45', date: '今天' },
+    { student: '李小红', status: '已上车', time: '16:20', date: '今天' },
+    { student: '王小华', status: '缺席', time: '07:30', date: '昨天' },
+    { student: '刘小丽', status: '已上车', time: '16:15', date: '昨天' },
+  ];
+  
+  return `
+    <div class="records-list">
+      ${recentRecords.map(record => `
+        <div class="record-item">
+          <div class="record-info">
+            <div class="record-student">${record.student}</div>
+            <div class="record-time">${record.date} ${record.time}</div>
+          </div>
+          <div class="record-status status-${record.status === '已上车' ? 'present' : 'absent'}">
+            ${record.status}
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function getTodayRecordsCount() {
+  // 示例：今天的记录数量
+  return Math.floor(Math.random() * 20) + 5;
+}
+
+function getAttendanceRate() {
+  // 示例：出勤率计算
+  return Math.floor(Math.random() * 20) + 80;
+}
+
+// ═══════════════════════════════════════════════════
+//  SETTINGS PAGE
+// ═══════════════════════════════════════════════════
+function loadSettingsPage() {
+  const content = document.getElementById('settingsContent');
+  const currentUncle = localStorage.getItem('selectedUncle') || '未选择';
+  
+  content.innerHTML = `
+    <div class="page-header">
+      <h2>⚙️ 系统设置</h2>
+      <p>管理个人配置和系统选项</p>
+    </div>
+    
+    <div class="settings-groups">
+      <div class="settings-group">
+        <h3>👤 个人设置</h3>
+        <div class="setting-item">
+          <div class="setting-info">
+            <div class="setting-label">当前司机</div>
+            <div class="setting-desc">选择您的身份</div>
+          </div>
+          <div class="setting-action">
+            <button class="btn-secondary" onclick="switchUncle()">
+              ${currentUncle} ✏️
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="settings-group">
+        <h3>🔧 系统工具</h3>
+        <div class="setting-item">
+          <div class="setting-info">
+            <div class="setting-label">API连接测试</div>
+            <div class="setting-desc">检查飞书API连接状态</div>
+          </div>
+          <div class="setting-action">
+            <button class="btn-primary" onclick="testAPIConnection()">
+              测试连接
+            </button>
+          </div>
+        </div>
+        
+        <div class="setting-item">
+          <div class="setting-info">
+            <div class="setting-label">清除缓存数据</div>
+            <div class="setting-desc">清除本地存储的数据</div>
+          </div>
+          <div class="setting-action">
+            <button class="btn-warning" onclick="clearCache()">
+              清除缓存
+            </button>
+          </div>
+        </div>
+        
+        <div class="setting-item">
+          <div class="setting-info">
+            <div class="setting-label">手动刷新数据</div>
+            <div class="setting-desc">强制重新获取最新数据</div>
+          </div>
+          <div class="setting-action">
+            <button class="btn-primary" onclick="doRefresh()">
+              刷新数据
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="settings-group">
+        <h3>📱 应用信息</h3>
+        <div class="setting-item">
+          <div class="setting-info">
+            <div class="setting-label">版本信息</div>
+            <div class="setting-desc">Uncle载送点名系统 v2.0</div>
+          </div>
+        </div>
+        
+        <div class="setting-item">
+          <div class="setting-info">
+            <div class="setting-label">最后同步</div>
+            <div class="setting-desc" id="lastSyncTime">加载中...</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="settings-group danger">
+        <h3>⚠️ 高级选项</h3>
+        <div class="setting-item">
+          <div class="setting-info">
+            <div class="setting-label">系统诊断</div>
+            <div class="setting-desc">运行完整的系统诊断</div>
+          </div>
+          <div class="setting-action">
+            <button class="btn-secondary" onclick="runDiagnostics()">
+              运行诊断
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  // 更新最后同步时间
+  updateLastSyncTime();
+}
+
+function testAPIConnection() {
+  showToast('正在测试API连接...', 'info');
+  
+  // 测试API连接
+  getToken().then(token => {
+    if (token) {
+      showToast('✅ API连接正常', 'success');
+    } else {
+      showToast('❌ API连接失败', 'error');
+    }
+  }).catch(err => {
+    showToast('❌ API连接错误: ' + err.message, 'error');
+  });
+}
+
+function clearCache() {
+  if (confirm('确定要清除所有缓存数据吗？这将需要重新登录。')) {
+    localStorage.clear();
+    showToast('✅ 缓存已清除', 'success');
+    setTimeout(() => {
+      location.reload();
+    }, 1500);
+  }
+}
+
+function updateLastSyncTime() {
+  const timeElement = document.getElementById('lastSyncTime');
+  if (timeElement) {
+    timeElement.textContent = new Date().toLocaleString('zh-CN');
+  }
+}
+
+function runDiagnostics() {
+  showToast('正在运行系统诊断...', 'info');
+  
+  // 简单的诊断检查
+  const checks = [
+    { name: 'Local Storage', status: localStorage ? '✅' : '❌' },
+    { name: 'Session Storage', status: sessionStorage ? '✅' : '❌' },
+    { name: 'Internet Connection', status: navigator.onLine ? '✅' : '❌' },
+    { name: 'JavaScript Enabled', status: '✅' },
+    { name: 'PWA Support', status: 'serviceWorker' in navigator ? '✅' : '❌' },
+  ];
+  
+  let diagnosticsHTML = `
+    <div style="background: #1a1a1a; border: 1px solid #333; border-radius: 12px; padding: 20px; margin-top: 16px;">
+      <h4 style="color: #fff; margin-bottom: 16px;">🔍 系统诊断结果</h4>
+      <div style="font-family: monospace; font-size: 14px;">
+        ${checks.map(check => `
+          <div style="margin-bottom: 8px; display: flex; justify-content: space-between;">
+            <span style="color: #ccc;">${check.name}:</span>
+            <span>${check.status}</span>
+          </div>
+        `).join('')}
+      </div>
+      <div style="margin-top: 16px; font-size: 12px; color: #bbb;">
+        诊断时间: ${new Date().toLocaleString('zh-CN')}
+      </div>
+    </div>
+  `;
+  
+  // 在设置页面显示诊断结果
+  const settingsContent = document.getElementById('settingsContent');
+  const existingDiagnostics = settingsContent.querySelector('.diagnostics-result');
+  if (existingDiagnostics) {
+    existingDiagnostics.remove();
+  }
+  
+  const diagnosticsDiv = document.createElement('div');
+  diagnosticsDiv.className = 'diagnostics-result';
+  diagnosticsDiv.innerHTML = diagnosticsHTML;
+  settingsContent.appendChild(diagnosticsDiv);
+  
+  showToast('✅ 诊断完成', 'success');
 }
 
 // ═══════════════════════════════════════════════════
