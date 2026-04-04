@@ -443,32 +443,31 @@ let CFG = {
   BASE:           'https://open.larksuite.com/open-apis',
 };
 
-// Load configuration from server
+// Load configuration - for testing use direct config
 async function loadConfig() {
   try {
+    // Try to load from API first
     const response = await fetch('/api/config');
     if (response.ok) {
       const config = await response.json();
       CFG = { ...CFG, ...config };
-      console.log('✅ 配置加载成功');
-    } else {
-      throw new Error('配置加载失败');
+      console.log('✅ 配置从API加载成功');
+      return;
     }
   } catch (error) {
-    console.error('❌ 无法加载配置:', error);
-    // 备用配置 (仅用于本地测试)
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-      CFG = {
-        APP_ID:         'cli_a945f55fcb789e15',
-        APP_SECRET:     'VIQRln9sTOss61v8EgtK6cWK55NHuf6A',
-        APP_TOKEN:      'U6v3bat8ya7zC4seMZhj4yFVpAe',
-        MASTER_TABLE:   'tbl5TqclpTe3eaXf',
-        ROLLCALL_TABLE: 'tblAuvKa4klEnsx1',
-        BASE:           'https://open.larksuite.com/open-apis',
-      };
-      console.log('🔧 使用本地测试配置');
-    }
+    console.log('⚠️ API配置加载失败，使用直接配置');
   }
+  
+  // Fallback to direct configuration for testing
+  CFG = {
+    APP_ID:         'cli_a945f55fcb789e15',
+    APP_SECRET:     'VIQRln9sTOss61v8EgtK6cWK55NHuf6A',
+    APP_TOKEN:      'U6v3bat8ya7zC4seMZhj4yFVpAe',
+    MASTER_TABLE:   'tbl5TqclpTe3eaXf',
+    ROLLCALL_TABLE: 'tblAuvKa4klEnsx1',
+    BASE:           'https://open.larksuite.com/open-apis',
+  };
+  console.log('🔧 使用直接配置进行测试');
 }
 
 const DAY_NAMES    = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
