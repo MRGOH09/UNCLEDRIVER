@@ -1,13 +1,7 @@
 {
   "functions": {
-    "api/*.js": {
-      "runtime": "@vercel/node"
+    "api/config.js": {
+      "runtime": "@vercel/node@18.x"
     }
-  },
-  "rewrites": [
-    {
-      "source": "/api/config",
-      "destination": "/api/config.js"
-    }
-  ]
+  }
 }
