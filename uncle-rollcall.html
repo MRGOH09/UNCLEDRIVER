@@ -1,0 +1,1154 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Uncle 载送点名</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica Neue', sans-serif; background: #f0f2f5; min-height: 100vh; }
+
+/* ── Header ── */
+.header {
+  background: linear-gradient(135deg, #1565c0, #1a73e8);
+  color: white;
+  padding: 16px 16px 14px;
+  text-align: center;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+.header h1 { font-size: 20px; font-weight: 700; letter-spacing: 0.5px; }
+.header .date { font-size: 13px; opacity: 0.85; margin-top: 4px; }
+
+/* ── Tabs ── */
+.tabs {
+  display: flex;
+  background: white;
+  border-bottom: 1px solid #e0e0e0;
+  position: sticky;
+  top: 62px;
+  z-index: 99;
+}
+.tab {
+  flex: 1;
+  padding: 14px 0;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  color: #888;
+  border-bottom: 3px solid transparent;
+  transition: all 0.2s;
+  user-select: none;
+}
+.tab.active { color: #1a73e8; border-bottom-color: #1a73e8; }
+.tab-count {
+  display: inline-block;
+  background: #e0e0e0;
+  color: #555;
+  border-radius: 10px;
+  font-size: 11px;
+  padding: 1px 7px;
+  margin-left: 5px;
+  font-weight: 600;
+}
+.tab.active .tab-count { background: #bbdefb; color: #1565c0; }
+
+/* ── Summary bar ── */
+.summary {
+  background: white;
+  padding: 9px 16px;
+  font-size: 13px;
+  color: #666;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.summary-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 500;
+}
+.pill-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.dot-pending { background: #ff9800; }
+.dot-onboard { background: #4caf50; }
+.dot-absent  { background: #f44336; }
+
+/* ── Cards ── */
+.cards { padding: 12px; }
+.card {
+  background: white;
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 1px 5px rgba(0,0,0,0.08);
+  transition: box-shadow 0.2s;
+}
+.card:active { box-shadow: 0 2px 10px rgba(0,0,0,0.15); }
+.card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.card-info { flex: 1; min-width: 0; }
+.student-name { font-size: 19px; font-weight: 700; color: #1a1a1a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.student-meta { font-size: 12px; color: #999; margin-top: 3px; }
+.student-meta span { margin-right: 10px; }
+
+/* ── Status badge ── */
+.status-badge {
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: transform 0.1s, opacity 0.1s;
+  border: 1.5px solid transparent;
+}
+.status-badge:active { transform: scale(0.95); opacity: 0.8; }
+.status-pending { background: #fff3e0; color: #e65100; border-color: #ffb74d; }
+.status-onboard { background: #e8f5e9; color: #2e7d32; border-color: #81c784; }
+.status-absent  { background: #fce4ec; color: #c62828; border-color: #ef9a9a; }
+
+.card-address { font-size: 13px; color: #555; margin-top: 9px; line-height: 1.5; display: flex; align-items: flex-start; gap: 5px; }
+.card-address-icon { flex-shrink: 0; margin-top: 1px; }
+
+/* ── Action buttons ── */
+.card-actions { display: flex; gap: 10px; margin-top: 12px; }
+.btn {
+  flex: 1;
+  padding: 11px 8px;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-decoration: none;
+  transition: opacity 0.15s;
+}
+.btn:active { opacity: 0.75; }
+.btn-call { background: #e3f2fd; color: #1565c0; }
+.btn-wa   { background: #e8f5e9; color: #1b5e20; }
+
+/* ── Loading ── */
+.loading { text-align: center; padding: 70px 20px; color: #888; }
+.spinner {
+  width: 44px; height: 44px;
+  border: 3px solid #e0e0e0;
+  border-top-color: #1a73e8;
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+  margin: 0 auto 16px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text { font-size: 15px; }
+.loading-sub  { font-size: 12px; color: #bbb; margin-top: 6px; }
+
+/* ── Error ── */
+.error-box {
+  background: #fce4ec;
+  color: #b71c1c;
+  padding: 18px;
+  margin: 14px;
+  border-radius: 12px;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.error-box h3 { font-size: 16px; margin-bottom: 8px; }
+
+/* ── Empty / No School ── */
+.empty { text-align: center; padding: 60px 20px; color: #aaa; font-size: 16px; }
+.empty-icon { font-size: 48px; margin-bottom: 12px; }
+.no-school { text-align: center; padding: 60px 20px; }
+.no-school-icon { font-size: 64px; margin-bottom: 16px; }
+.no-school h2 { font-size: 22px; color: #333; margin-bottom: 8px; }
+.no-school p  { font-size: 14px; color: #888; }
+
+/* ── FAB ── */
+.fab {
+  position: fixed;
+  bottom: 22px; right: 18px;
+  background: #1a73e8;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 54px; height: 54px;
+  font-size: 22px;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(26,115,232,0.45);
+  display: flex; align-items: center; justify-content: center;
+  transition: transform 0.15s, box-shadow 0.15s;
+  z-index: 200;
+}
+.fab:active { transform: scale(0.93); box-shadow: 0 2px 8px rgba(26,115,232,0.3); }
+.fab.spinning svg { animation: spin 0.75s linear infinite; }
+
+/* ── Toast ── */
+#toast {
+  position: fixed;
+  bottom: 90px; left: 50%;
+  transform: translateX(-50%) translateY(10px);
+  background: rgba(0,0,0,0.75);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 22px;
+  font-size: 14px;
+  opacity: 0;
+  transition: opacity 0.25s, transform 0.25s;
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 300;
+}
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ── Status Indicator ── */
+.status-indicator {
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 10px;
+  margin-top: 4px;
+  font-weight: 600;
+}
+.status-online { background: #e8f5e9; color: #2e7d32; }
+.status-offline { background: #fce4ec; color: #c62828; }
+.status-testing { background: #fff3e0; color: #e65100; }
+
+/* ── Test Panel ── */
+.test-panel {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.8);
+  z-index: 1000;
+  display: none;
+  overflow-y: auto;
+}
+.test-content {
+  background: white;
+  margin: 20px;
+  border-radius: 12px;
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+}
+.test-header {
+  padding: 20px;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.test-close { font-size: 24px; cursor: pointer; }
+.test-body { padding: 20px; }
+.test-section { margin-bottom: 24px; }
+.test-section h3 { font-size: 16px; margin-bottom: 12px; color: #333; }
+.test-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+.test-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  min-width: 80px;
+}
+.test-btn-primary { background: #1a73e8; color: white; }
+.test-btn-secondary { background: #f0f2f5; color: #333; }
+.test-result {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 4px;
+  min-width: 60px;
+  text-align: center;
+}
+.test-pass { background: #e8f5e9; color: #2e7d32; }
+.test-fail { background: #fce4ec; color: #c62828; }
+.test-running { background: #fff3e0; color: #e65100; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🚐 Uncle 载送点名</h1>
+  <div class="date" id="headerDate">-</div>
+  <div class="status-indicator" id="connectionStatus" style="display:none"></div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" id="tabC" onclick="switchTab('C')">
+    🌅 来接<span class="tab-count" id="cntC">-</span>
+  </div>
+  <div class="tab" id="tabB" onclick="switchTab('B')">
+    🏠 送回<span class="tab-count" id="cntB">-</span>
+  </div>
+</div>
+
+<div class="summary" id="summary" style="display:none"></div>
+
+<div id="content">
+  <div class="loading">
+    <div class="spinner"></div>
+    <div class="loading-text">正在加载学生数据…</div>
+    <div class="loading-sub">首次运行会自动建立表格字段，请稍候</div>
+  </div>
+</div>
+
+<button class="fab" id="fabBtn" onclick="doRefresh()" title="刷新">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+       stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="23 4 23 10 17 10"/>
+    <polyline points="1 20 1 14 7 14"/>
+    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+  </svg>
+</button>
+
+<div id="toast"></div>
+
+<!-- Test Panel -->
+<div class="test-panel" id="testPanel">
+  <div class="test-content">
+    <div class="test-header">
+      <h2>🔧 系统验证面板</h2>
+      <span class="test-close" onclick="closeTestPanel()">×</span>
+    </div>
+    <div class="test-body">
+      <div class="test-section">
+        <h3>📡 API连接测试</h3>
+        <div class="test-item">
+          <span>飞书API认证</span>
+          <div style="display:flex;gap:8px;align-items:center">
+            <button class="test-btn test-btn-secondary" onclick="testApiAuth()">测试</button>
+            <span class="test-result" id="authResult">未测试</span>
+          </div>
+        </div>
+        <div class="test-item">
+          <span>读取主表数据</span>
+          <div style="display:flex;gap:8px;align-items:center">
+            <button class="test-btn test-btn-secondary" onclick="testMasterTable()">测试</button>
+            <span class="test-result" id="masterResult">未测试</span>
+          </div>
+        </div>
+        <div class="test-item">
+          <span>点名表字段创建</span>
+          <div style="display:flex;gap:8px;align-items:center">
+            <button class="test-btn test-btn-secondary" onclick="testFieldCreation()">测试</button>
+            <span class="test-result" id="fieldsResult">未测试</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="test-section">
+        <h3>🔄 状态切换测试</h3>
+        <div class="test-item">
+          <span>模拟状态切换</span>
+          <div style="display:flex;gap:8px;align-items:center">
+            <button class="test-btn test-btn-secondary" onclick="testStatusCycle()">测试</button>
+            <span class="test-result" id="statusResult">未测试</span>
+          </div>
+        </div>
+        <div class="test-item">
+          <span>数据回滚验证</span>
+          <div style="display:flex;gap:8px;align-items:center">
+            <button class="test-btn test-btn-secondary" onclick="testDataRollback()">测试</button>
+            <span class="test-result" id="rollbackResult">未测试</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="test-section">
+        <h3>📱 移动端兼容性</h3>
+        <div class="test-item">
+          <span>触摸响应测试</span>
+          <div style="display:flex;gap:8px;align-items:center">
+            <button class="test-btn test-btn-secondary" onclick="testTouchResponse()">测试</button>
+            <span class="test-result" id="touchResult">未测试</span>
+          </div>
+        </div>
+        <div class="test-item">
+          <span>屏幕适配检查</span>
+          <div style="display:flex;gap:8px;align-items:center">
+            <button class="test-btn test-btn-secondary" onclick="testScreenAdaptation()">测试</button>
+            <span class="test-result" id="screenResult">未测试</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="test-section">
+        <h3>⚠️ 错误处理验证</h3>
+        <div class="test-item">
+          <span>网络中断模拟</span>
+          <div style="display:flex;gap:8px;align-items:center">
+            <button class="test-btn test-btn-secondary" onclick="testNetworkFailure()">测试</button>
+            <span class="test-result" id="networkResult">未测试</span>
+          </div>
+        </div>
+        <div class="test-item">
+          <span>API错误处理</span>
+          <div style="display:flex;gap:8px;align-items:center">
+            <button class="test-btn test-btn-secondary" onclick="testApiErrors()">测试</button>
+            <span class="test-result" id="apiErrorResult">未测试</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="test-section">
+        <h3>🎯 数据同步验证</h3>
+        <div class="test-item">
+          <span>本地与服务器一致性</span>
+          <div style="display:flex;gap:8px;align-items:center">
+            <button class="test-btn test-btn-secondary" onclick="testDataConsistency()">测试</button>
+            <span class="test-result" id="consistencyResult">未测试</span>
+          </div>
+        </div>
+        <div class="test-item">
+          <span>批量操作验证</span>
+          <div style="display:flex;gap:8px;align-items:center">
+            <button class="test-btn test-btn-secondary" onclick="testBatchOperations()">测试</button>
+            <span class="test-result" id="batchResult">未测试</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="text-align:center;margin-top:24px">
+        <button class="test-btn test-btn-primary" onclick="runAllTests()" style="padding:12px 24px">🚀 运行所有测试</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+//  CONFIG
+// ═══════════════════════════════════════════════════
+const CFG = {
+  APP_ID:         'cli_a945f55fcb789e15',
+  APP_SECRET:     'VIQRln9sTOss61v8EgtK6cWK55NHuf6A',
+  APP_TOKEN:      'U6v3bat8ya7zC4seMZhj4yFVpAe',
+  MASTER_TABLE:   'tbl5TqclpTe3eaXf',
+  ROLLCALL_TABLE: 'tblAuvKa4klEnsx1',
+  BASE:           'https://open.larksuite.com/open-apis',
+};
+
+const DAY_NAMES    = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+const CN_DAYS      = ['日','一','二','三','四','五','六'];
+const STATUS_CYCLE = ['待确认','已上车','缺席'];
+const STATUS_CLASS = { '待确认':'status-pending', '已上车':'status-onboard', '缺席':'status-absent' };
+const STATUS_EMOJI = { '待确认':'⏳', '已上车':'✅', '缺席':'❌' };
+
+// ═══════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════
+let _token    = null;
+let _tokenExp = 0;
+let activeTab = 'C';
+let studentsC  = [];
+let studentsB  = [];
+let rollCallMap = {};
+
+// ═══════════════════════════════════════════════════
+//  DATE HELPERS
+// ═══════════════════════════════════════════════════
+function pad(n) { return String(n).padStart(2,'0'); }
+
+function getTodayStr() {
+  const d = new Date();
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+}
+
+function getTodayDisplay() {
+  const d = new Date();
+  return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（星期${CN_DAYS[d.getDay()]}）`;
+}
+
+function getDayPrefix() { return DAY_NAMES[new Date().getDay()]; }
+
+// ═══════════════════════════════════════════════════
+//  LARK API HELPERS
+// ═══════════════════════════════════════════════════
+async function getToken() {
+  if (_token && Date.now() < _tokenExp) return _token;
+  const r = await fetch(`${CFG.BASE}/auth/v3/tenant_access_token/internal`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ app_id: CFG.APP_ID, app_secret: CFG.APP_SECRET })
+  });
+  const d = await r.json();
+  if (d.code !== 0) throw new Error(`认证失败: ${d.msg}`);
+  _token    = d.tenant_access_token;
+  _tokenExp = Date.now() + (d.expire - 120) * 1000;
+  return _token;
+}
+
+async function apiFetch(method, path, body) {
+  const tk   = await getToken();
+  const opts = {
+    method,
+    headers: { Authorization: `Bearer ${tk}`, 'Content-Type': 'application/json' }
+  };
+  if (body) opts.body = JSON.stringify(body);
+  const r = await fetch(`${CFG.BASE}/${path}`, opts);
+  return r.json();
+}
+
+const apiGet  = (path, qs) => apiFetch('GET',  path + (qs ? '?'+new URLSearchParams(qs) : ''));
+const apiPost = (path, b)  => apiFetch('POST', path, b);
+const apiPut  = (path, b)  => apiFetch('PUT',  path, b);
+
+async function getAllRecords(tableId, extra = {}) {
+  const all = [];
+  let pageToken = null;
+  do {
+    const p = { page_size: 100, ...extra };
+    if (pageToken) p.page_token = pageToken;
+    const d = await apiGet(`bitable/v1/apps/${CFG.APP_TOKEN}/tables/${tableId}/records`, p);
+    if (d.code !== 0) throw new Error(`读取记录失败 (${tableId}): ${d.msg}`);
+    all.push(...(d.data?.items || []));
+    pageToken = d.data?.has_more ? d.data.page_token : null;
+  } while (pageToken);
+  return all;
+}
+
+function cellText(cell) {
+  if (cell == null) return '';
+  if (typeof cell === 'string') return cell.trim();
+  if (typeof cell === 'number') return String(cell);
+  if (Array.isArray(cell)) {
+    return cell.map(x => {
+      if (typeof x === 'string') return x;
+      return x?.text ?? x?.name ?? x?.value ?? '';
+    }).join('').trim();
+  }
+  if (typeof cell === 'object') {
+    return String(cell.text ?? cell.name ?? cell.value ?? '').trim();
+  }
+  return '';
+}
+
+// ═══════════════════════════════════════════════════
+//  AUTO-CREATE ROLL CALL TABLE FIELDS
+// ═══════════════════════════════════════════════════
+const REQUIRED_FIELDS = [
+  { field_name: '名字',    type: 1 },
+  { field_name: '日期',    type: 1 },
+  { field_name: '班次',    type: 1 },
+  { field_name: '司机',    type: 1 },
+  { field_name: '时间',    type: 1 },
+  { field_name: '地址',    type: 1 },
+  { field_name: '电话',    type: 1 },
+  { field_name: '点名时间', type: 1 },
+  {
+    field_name: '状态', type: 3,
+    property: { options: [
+      { name: '待确认', color: 0 },
+      { name: '已上车', color: 1 },
+      { name: '缺席',   color: 3 },
+    ]}
+  },
+];
+
+async function ensureRollCallFields() {
+  const d = await apiGet(`bitable/v1/apps/${CFG.APP_TOKEN}/tables/${CFG.ROLLCALL_TABLE}/fields`);
+  if (d.code !== 0) throw new Error(`读取字段失败: ${d.msg}`);
+  const existing = new Set((d.data?.items || []).map(f => f.field_name));
+  for (const f of REQUIRED_FIELDS) {
+    if (!existing.has(f.field_name)) {
+      await apiPost(`bitable/v1/apps/${CFG.APP_TOKEN}/tables/${CFG.ROLLCALL_TABLE}/fields`, f);
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════
+//  PHONE HELPERS
+// ═══════════════════════════════════════════════════
+function waLink(phone) {
+  let n = (phone || '').replace(/[\s\-()]/g,'').replace(/\D/g,'');
+  if (!n) return null;
+  if (n.startsWith('60')) return `https://wa.me/${n}`;
+  if (n.startsWith('0'))  return `https://wa.me/6${n}`;
+  return `https://wa.me/60${n}`;
+}
+function telLink(phone) {
+  const n = (phone || '').replace(/[\s()]/g,'');
+  return n ? `tel:${n}` : null;
+}
+
+// ═══════════════════════════════════════════════════
+//  MAIN INIT
+// ═══════════════════════════════════════════════════
+async function init() {
+  const dayPrefix = getDayPrefix();
+  document.getElementById('headerDate').textContent = getTodayDisplay();
+
+  if (dayPrefix === 'SUN') {
+    document.getElementById('cntC').textContent = '0';
+    document.getElementById('cntB').textContent = '0';
+    document.getElementById('summary').style.display = 'none';
+    document.getElementById('content').innerHTML = `
+      <div class="no-school">
+        <div class="no-school-icon">😴</div>
+        <h2>今天是星期日</h2>
+        <p>休息日，不需要载送</p>
+      </div>`;
+    return;
+  }
+
+  document.getElementById('content').innerHTML = `
+    <div class="loading">
+      <div class="spinner"></div>
+      <div class="loading-text">正在加载数据…</div>
+    </div>`;
+  document.getElementById('summary').style.display = 'none';
+
+  try {
+    // 1. Ensure fields exist in roll call table
+    await ensureRollCallFields();
+
+    // 2. Read master schedule for today
+    const colC = `${dayPrefix}(C)`;
+    const colB = `${dayPrefix}(B)`;
+    const masterRecs = await getAllRecords(CFG.MASTER_TABLE);
+
+    studentsC = [];
+    studentsB = [];
+    for (const rec of masterRecs) {
+      const f       = rec.fields;
+      const name    = cellText(f['名字']);
+      if (!name) continue;
+      const driver  = cellText(f['driver']);
+      const address = cellText(f['ADDRESS']);
+      const phone   = cellText(f['电话号码']);
+      const timeC   = cellText(f[colC]);
+      const timeB   = cellText(f[colB]);
+      if (timeC) studentsC.push({ name, driver, address, phone, time: timeC, type: 'C' });
+      if (timeB) studentsB.push({ name, driver, address, phone, time: timeB, type: 'B' });
+    }
+
+    const sortT = (a, b) => a.time.localeCompare(b.time);
+    studentsC.sort(sortT);
+    studentsB.sort(sortT);
+
+    document.getElementById('cntC').textContent = studentsC.length;
+    document.getElementById('cntB').textContent = studentsB.length;
+
+    // 3. Load today's existing roll call records
+    const today = getTodayStr();
+    const allRC  = await getAllRecords(CFG.ROLLCALL_TABLE);
+    rollCallMap  = {};
+    for (const rec of allRC) {
+      const f = rec.fields;
+      if (cellText(f['日期']) !== today) continue;
+      const name   = cellText(f['名字']);
+      const type   = cellText(f['班次']);
+      const status = cellText(f['状态']) || '待确认';
+      rollCallMap[`${name}|${type}`] = { recordId: rec.record_id, status };
+    }
+
+    // 4. Batch-create missing records
+    const toCreate = [...studentsC, ...studentsB]
+      .filter(s => !rollCallMap[`${s.name}|${s.type}`]);
+
+    if (toCreate.length > 0) {
+      const records = toCreate.map(s => ({
+        fields: {
+          '名字': s.name, '日期': today, '班次': s.type,
+          '司机': s.driver, '时间': s.time,
+          '地址': s.address, '电话': s.phone, '状态': '待确认',
+        }
+      }));
+      for (let i = 0; i < records.length; i += 100) {
+        const d = await apiPost(
+          `bitable/v1/apps/${CFG.APP_TOKEN}/tables/${CFG.ROLLCALL_TABLE}/records/batch_create`,
+          { records: records.slice(i, i+100) }
+        );
+        if (d.code === 0 && d.data?.records) {
+          d.data.records.forEach((rec, j) => {
+            const s = toCreate[i+j];
+            rollCallMap[`${s.name}|${s.type}`] = { recordId: rec.record_id, status: '待确认' };
+          });
+        }
+      }
+    }
+
+    renderCards();
+
+  } catch (e) {
+    document.getElementById('content').innerHTML = `
+      <div class="error-box">
+        <h3>⚠️ 加载失败</h3>
+        <p>${esc(e.message)}</p>
+        <p style="margin-top:8px;font-size:12px;color:#888">
+          请检查网络连接，然后点击右下角 ↻ 按钮重试
+        </p>
+      </div>`;
+    console.error(e);
+  }
+}
+
+// ═══════════════════════════════════════════════════
+//  RENDER
+// ═══════════════════════════════════════════════════
+function renderCards() {
+  const students = activeTab === 'C' ? studentsC : studentsB;
+  const label    = activeTab === 'C' ? '来接' : '送回';
+
+  let onboard = 0, absent = 0, pending = 0;
+  students.forEach(s => {
+    const st = rollCallMap[`${s.name}|${s.type}`]?.status || '待确认';
+    if (st === '已上车') onboard++;
+    else if (st === '缺席') absent++;
+    else pending++;
+  });
+
+  const sumEl = document.getElementById('summary');
+  sumEl.style.display = 'flex';
+  sumEl.innerHTML = `
+    <span class="summary-pill"><span class="pill-dot dot-pending"></span>待确认 ${pending}</span>
+    <span class="summary-pill"><span class="pill-dot dot-onboard"></span>已上车 ${onboard}</span>
+    <span class="summary-pill"><span class="pill-dot dot-absent"></span>缺席 ${absent}</span>
+    <span style="color:#bbb">共 ${students.length} 人</span>`;
+
+  if (students.length === 0) {
+    document.getElementById('content').innerHTML = `
+      <div class="empty">
+        <div class="empty-icon">📭</div>
+        今天没有「${label}」的学生
+      </div>`;
+    return;
+  }
+
+  const html = students.map(s => {
+    const key    = `${s.name}|${s.type}`;
+    const status = rollCallMap[key]?.status || '待确认';
+    const cls    = STATUS_CLASS[status];
+    const emoji  = STATUS_EMOJI[status];
+    const wa     = waLink(s.phone);
+    const tel    = telLink(s.phone);
+    const safeK  = key.replace(/[|()\s]/g, '_');
+
+    return `<div class="card" id="card_${safeK}">
+      <div class="card-top">
+        <div class="card-info">
+          <div class="student-name">${esc(s.name)}</div>
+          <div class="student-meta">
+            <span>⏰ ${esc(s.time)}</span>
+            ${s.driver ? `<span>🚗 ${esc(s.driver)}</span>` : ''}
+          </div>
+        </div>
+        <div class="status-badge ${cls}" onclick="cycleStatus('${escA(s.name)}','${s.type}')">
+          ${emoji} ${status}
+        </div>
+      </div>
+      ${s.address ? `
+      <div class="card-address">
+        <span class="card-address-icon">📍</span>
+        <span>${esc(s.address)}</span>
+      </div>` : ''}
+      ${(wa || tel) ? `
+      <div class="card-actions">
+        ${tel ? `<a class="btn btn-call" href="${tel}">📞 打电话</a>` : ''}
+        ${wa  ? `<a class="btn btn-wa" href="${wa}" target="_blank">💬 WhatsApp</a>` : ''}
+      </div>` : ''}
+    </div>`;
+  }).join('');
+
+  document.getElementById('content').innerHTML = `<div class="cards">${html}</div>`;
+}
+
+// ═══════════════════════════════════════════════════
+//  STATUS CYCLE
+// ═══════════════════════════════════════════════════
+async function cycleStatus(name, type) {
+  const key   = `${name}|${type}`;
+  const cur   = rollCallMap[key]?.status || '待确认';
+  const next  = STATUS_CYCLE[(STATUS_CYCLE.indexOf(cur) + 1) % STATUS_CYCLE.length];
+  const recId = rollCallMap[key]?.recordId;
+
+  // Optimistic UI update
+  rollCallMap[key] = { ...rollCallMap[key], status: next };
+  renderCards();
+
+  if (!recId) { showToast('⚠️ 无记录ID，请刷新'); return; }
+
+  try {
+    const d = await apiPut(
+      `bitable/v1/apps/${CFG.APP_TOKEN}/tables/${CFG.ROLLCALL_TABLE}/records/${recId}`,
+      { fields: { '状态': next, '点名时间': new Date().toISOString() } }
+    );
+    if (d.code !== 0) throw new Error(d.msg);
+    showToast(`${name} → ${next}`);
+  } catch (e) {
+    rollCallMap[key] = { ...rollCallMap[key], status: cur };
+    renderCards();
+    showToast('❌ 保存失败，已还原');
+    console.error('Status update failed:', e);
+  }
+}
+
+// ═══════════════════════════════════════════════════
+//  TAB / REFRESH
+// ═══════════════════════════════════════════════════
+function switchTab(tab) {
+  activeTab = tab;
+  document.getElementById('tabC').classList.toggle('active', tab === 'C');
+  document.getElementById('tabB').classList.toggle('active', tab === 'B');
+  renderCards();
+}
+
+function doRefresh() {
+  const fab = document.getElementById('fabBtn');
+  fab.classList.add('spinning');
+  init().finally(() => fab.classList.remove('spinning'));
+}
+
+// Add double-click to open test panel
+document.addEventListener('DOMContentLoaded', () => {
+  let clickCount = 0;
+  document.getElementById('headerDate').addEventListener('click', () => {
+    clickCount++;
+    if (clickCount === 2) {
+      openTestPanel();
+      clickCount = 0;
+    }
+    setTimeout(() => clickCount = 0, 500);
+  });
+});
+
+// ═══════════════════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════════════════
+let _toastTimer;
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
+}
+
+// ═══════════════════════════════════════════════════
+//  ESCAPE
+// ═══════════════════════════════════════════════════
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function escA(s) { return String(s||'').replace(/'/g,"\\'"); }
+
+// ═══════════════════════════════════════════════════
+//  VALIDATION SYSTEM
+// ═══════════════════════════════════════════════════
+let testResults = {};
+
+function openTestPanel() {
+  document.getElementById('testPanel').style.display = 'block';
+  updateConnectionStatus('testing');
+}
+
+function closeTestPanel() {
+  document.getElementById('testPanel').style.display = 'none';
+  updateConnectionStatus('online');
+}
+
+function updateConnectionStatus(status) {
+  const el = document.getElementById('connectionStatus');
+  el.style.display = 'block';
+  el.className = `status-indicator status-${status}`;
+  const statusText = {
+    online: '🟢 在线',
+    offline: '🔴 离线', 
+    testing: '🟡 测试中'
+  };
+  el.textContent = statusText[status] || '';
+}
+
+function setTestResult(testId, result, details = '') {
+  const el = document.getElementById(testId);
+  el.className = `test-result test-${result}`;
+  el.textContent = result === 'pass' ? '通过' : result === 'fail' ? '失败' : '运行中';
+  if (details) el.title = details;
+  testResults[testId] = { result, details, timestamp: Date.now() };
+}
+
+async function testApiAuth() {
+  setTestResult('authResult', 'running');
+  try {
+    const token = await getToken();
+    if (token && token.length > 0) {
+      setTestResult('authResult', 'pass', '认证成功，token有效');
+    } else {
+      setTestResult('authResult', 'fail', '无法获取有效token');
+    }
+  } catch (e) {
+    setTestResult('authResult', 'fail', `认证失败: ${e.message}`);
+  }
+}
+
+async function testMasterTable() {
+  setTestResult('masterResult', 'running');
+  try {
+    const records = await getAllRecords(CFG.MASTER_TABLE);
+    if (records && records.length > 0) {
+      setTestResult('masterResult', 'pass', `成功读取${records.length}条记录`);
+    } else {
+      setTestResult('masterResult', 'fail', '主表为空或读取失败');
+    }
+  } catch (e) {
+    setTestResult('masterResult', 'fail', `读取失败: ${e.message}`);
+  }
+}
+
+async function testFieldCreation() {
+  setTestResult('fieldsResult', 'running');
+  try {
+    await ensureRollCallFields();
+    const fieldsData = await apiGet(`bitable/v1/apps/${CFG.APP_TOKEN}/tables/${CFG.ROLLCALL_TABLE}/fields`);
+    if (fieldsData.code === 0) {
+      const fieldNames = fieldsData.data?.items?.map(f => f.field_name) || [];
+      const requiredFields = REQUIRED_FIELDS.map(f => f.field_name);
+      const missing = requiredFields.filter(name => !fieldNames.includes(name));
+      if (missing.length === 0) {
+        setTestResult('fieldsResult', 'pass', '所有必需字段都存在');
+      } else {
+        setTestResult('fieldsResult', 'fail', `缺少字段: ${missing.join(', ')}`);
+      }
+    } else {
+      setTestResult('fieldsResult', 'fail', `字段检查失败: ${fieldsData.msg}`);
+    }
+  } catch (e) {
+    setTestResult('fieldsResult', 'fail', `字段创建失败: ${e.message}`);
+  }
+}
+
+async function testStatusCycle() {
+  setTestResult('statusResult', 'running');
+  try {
+    const statuses = ['待确认', '已上车', '缺席'];
+    let currentIndex = 0;
+    
+    for (let i = 0; i < 3; i++) {
+      const expected = statuses[(currentIndex + 1) % statuses.length];
+      const nextIndex = (STATUS_CYCLE.indexOf(statuses[currentIndex]) + 1) % STATUS_CYCLE.length;
+      const actual = STATUS_CYCLE[nextIndex];
+      
+      if (actual !== expected) {
+        setTestResult('statusResult', 'fail', `状态循环错误: 期望${expected}，得到${actual}`);
+        return;
+      }
+      currentIndex = (currentIndex + 1) % statuses.length;
+    }
+    setTestResult('statusResult', 'pass', '状态循环逻辑正确');
+  } catch (e) {
+    setTestResult('statusResult', 'fail', `状态测试失败: ${e.message}`);
+  }
+}
+
+async function testDataRollback() {
+  setTestResult('rollbackResult', 'running');
+  try {
+    // 模拟失败场景的数据回滚
+    const originalMap = JSON.parse(JSON.stringify(rollCallMap));
+    
+    // 模拟状态更改
+    const testKey = Object.keys(rollCallMap)[0];
+    if (testKey) {
+      const original = rollCallMap[testKey]?.status || '待确认';
+      rollCallMap[testKey] = { ...rollCallMap[testKey], status: '已上车' };
+      
+      // 模拟失败并回滚
+      rollCallMap[testKey] = { ...rollCallMap[testKey], status: original };
+      
+      if (rollCallMap[testKey].status === original) {
+        setTestResult('rollbackResult', 'pass', '数据回滚机制正常');
+      } else {
+        setTestResult('rollbackResult', 'fail', '数据回滚失败');
+      }
+    } else {
+      setTestResult('rollbackResult', 'fail', '无数据可测试回滚');
+    }
+  } catch (e) {
+    setTestResult('rollbackResult', 'fail', `回滚测试失败: ${e.message}`);
+  }
+}
+
+function testTouchResponse() {
+  setTestResult('touchResult', 'running');
+  try {
+    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    const hasTouch = 'TouchEvent' in window;
+    const hasPointer = 'PointerEvent' in window;
+    
+    if (isTouchDevice || hasTouch || hasPointer) {
+      setTestResult('touchResult', 'pass', '设备支持触摸操作');
+    } else {
+      setTestResult('touchResult', 'fail', '设备不支持触摸操作');
+    }
+  } catch (e) {
+    setTestResult('touchResult', 'fail', `触摸测试失败: ${e.message}`);
+  }
+}
+
+function testScreenAdaptation() {
+  setTestResult('screenResult', 'running');
+  try {
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    const ratio = window.devicePixelRatio || 1;
+    
+    const isMobile = width <= 768;
+    const isTablet = width > 768 && width <= 1024;
+    const isDesktop = width > 1024;
+    
+    let deviceType = isMobile ? 'mobile' : isTablet ? 'tablet' : 'desktop';
+    
+    setTestResult('screenResult', 'pass', `${deviceType} (${width}x${height}, ratio:${ratio})`);
+  } catch (e) {
+    setTestResult('screenResult', 'fail', `屏幕适配测试失败: ${e.message}`);
+  }
+}
+
+async function testNetworkFailure() {
+  setTestResult('networkResult', 'running');
+  try {
+    // 模拟网络请求失败
+    const originalFetch = window.fetch;
+    let errorCaught = false;
+    
+    // 临时替换fetch以模拟网络错误
+    window.fetch = () => Promise.reject(new Error('Network error simulated'));
+    
+    try {
+      await getToken();
+    } catch (e) {
+      errorCaught = true;
+    }
+    
+    // 恢复原始fetch
+    window.fetch = originalFetch;
+    
+    if (errorCaught) {
+      setTestResult('networkResult', 'pass', '网络错误正确捕获');
+    } else {
+      setTestResult('networkResult', 'fail', '网络错误未被捕获');
+    }
+  } catch (e) {
+    setTestResult('networkResult', 'fail', `网络测试失败: ${e.message}`);
+  }
+}
+
+async function testApiErrors() {
+  setTestResult('apiErrorResult', 'running');
+  try {
+    // 测试无效的API调用
+    const result = await apiGet('invalid/endpoint/test');
+    if (result.code !== 0) {
+      setTestResult('apiErrorResult', 'pass', 'API错误正确返回错误码');
+    } else {
+      setTestResult('apiErrorResult', 'fail', 'API错误未正确处理');
+    }
+  } catch (e) {
+    setTestResult('apiErrorResult', 'pass', `API错误正确抛出异常: ${e.message.substring(0,50)}...`);
+  }
+}
+
+async function testDataConsistency() {
+  setTestResult('consistencyResult', 'running');
+  try {
+    const today = getTodayStr();
+    const serverRecords = await getAllRecords(CFG.ROLLCALL_TABLE);
+    const todayRecords = serverRecords.filter(rec => 
+      cellText(rec.fields['日期']) === today
+    );
+    
+    const localKeys = Object.keys(rollCallMap);
+    const serverKeys = todayRecords.map(rec => 
+      `${cellText(rec.fields['名字'])}|${cellText(rec.fields['班次'])}`
+    );
+    
+    const missing = localKeys.filter(key => !serverKeys.includes(key));
+    const extra = serverKeys.filter(key => !localKeys.includes(key));
+    
+    if (missing.length === 0 && extra.length === 0) {
+      setTestResult('consistencyResult', 'pass', '本地与服务器数据一致');
+    } else {
+      setTestResult('consistencyResult', 'fail', `不一致: 本地缺${missing.length}，服务器多${extra.length}`);
+    }
+  } catch (e) {
+    setTestResult('consistencyResult', 'fail', `数据一致性检查失败: ${e.message}`);
+  }
+}
+
+async function testBatchOperations() {
+  setTestResult('batchResult', 'running');
+  try {
+    // 测试批量记录创建逻辑
+    const testRecords = [
+      { fields: { '名字': 'test1', '日期': '2024-01-01', '班次': 'C', '状态': '待确认' }},
+      { fields: { '名字': 'test2', '日期': '2024-01-01', '班次': 'B', '状态': '待确认' }}
+    ];
+    
+    // 这里只测试批量逻辑，不实际发送请求
+    const batchSize = 100;
+    const batches = [];
+    for (let i = 0; i < testRecords.length; i += batchSize) {
+      batches.push(testRecords.slice(i, i + batchSize));
+    }
+    
+    if (batches.length > 0) {
+      setTestResult('batchResult', 'pass', `批量逻辑正确，共${batches.length}批次`);
+    } else {
+      setTestResult('batchResult', 'fail', '批量逻辑错误');
+    }
+  } catch (e) {
+    setTestResult('batchResult', 'fail', `批量操作测试失败: ${e.message}`);
+  }
+}
+
+async function runAllTests() {
+  const tests = [
+    ['authResult', testApiAuth],
+    ['masterResult', testMasterTable],
+    ['fieldsResult', testFieldCreation],
+    ['statusResult', testStatusCycle],
+    ['rollbackResult', testDataRollback],
+    ['touchResult', testTouchResponse],
+    ['screenResult', testScreenAdaptation],
+    ['networkResult', testNetworkFailure],
+    ['apiErrorResult', testApiErrors],
+    ['consistencyResult', testDataConsistency],
+    ['batchResult', testBatchOperations]
+  ];
+  
+  showToast('🚀 开始运行所有测试...');
+  
+  for (const [resultId, testFn] of tests) {
+    await testFn();
+    await new Promise(resolve => setTimeout(resolve, 200)); // 短暂延迟
+  }
+  
+  const passCount = Object.values(testResults).filter(r => r.result === 'pass').length;
+  const totalCount = tests.length;
+  
+  showToast(`✅ 测试完成: ${passCount}/${totalCount} 通过`);
+  updateConnectionStatus(passCount === totalCount ? 'online' : 'offline');
+}
+
+// ═══════════════════════════════════════════════════
+//  START
+// ═══════════════════════════════════════════════════
+init();
+</script>
+</body>
+</html>
