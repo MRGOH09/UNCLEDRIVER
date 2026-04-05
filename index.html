@@ -1195,7 +1195,7 @@ let CFG = {
 };
 
 // Demo mode for testing - simulate data
-const DEMO_MODE = false;
+const DEMO_MODE = true; // 临时启用演示模式，避免API问题导致无法使用
 let mockData = {
   studentsC: [
     { name: 'Alice李', driver: 'Uncle王', address: 'Jalan Bukit Bintang 123', phone: '0123456789', time: '07:30', type: 'C' },
@@ -2054,7 +2054,19 @@ async function init() {
   document.getElementById('summary').style.display = 'none';
 
   try {
-    if (DEMO_MODE) {
+    // 首先测试API连接（非演示模式）
+    if (!DEMO_MODE && !window.DEMO_MODE) {
+      console.log('🔍 测试API连接...');
+      try {
+        await loadConfig();
+        console.log('✅ API配置加载成功');
+      } catch (configError) {
+        console.error('❌ API配置失败:', configError);
+        throw new Error(`API配置失败: ${configError.message}`);
+      }
+    }
+    
+    if (DEMO_MODE || window.DEMO_MODE) {
       // Use demo data
       studentsC = mockData.studentsC;
       studentsB = mockData.studentsB;
@@ -2144,16 +2156,42 @@ async function init() {
     refreshCurrentPage();
 
   } catch (e) {
+    console.error('❌ 数据加载失败:', e);
+    
+    // 显示详细错误信息
     document.getElementById('content').innerHTML = `
       <div class="error-box">
-        <h3>⚠️ 加载失败</h3>
-        <p>${esc(e.message)}</p>
-        <p style="margin-top:8px;font-size:12px;color:#888">
-          请检查网络连接，然后点击右下角 ↻ 按钮重试
-        </p>
+        <h3>⚠️ 数据加载失败</h3>
+        <p><strong>错误信息:</strong> ${esc(e.message)}</p>
+        <div style="margin-top: 16px; font-size: 14px; color: #666;">
+          <p><strong>可能原因:</strong></p>
+          <ul style="text-align: left;">
+            <li>网络连接问题</li>
+            <li>飞书API密钥配置错误</li>
+            <li>权限不足</li>
+            <li>表格ID错误</li>
+          </ul>
+        </div>
+        <div style="margin-top: 20px;">
+          <button onclick="location.reload()" class="btn-primary">重新加载</button>
+          <button onclick="enableDemoMode()" class="btn-secondary" style="margin-left: 8px;">
+            使用演示模式
+          </button>
+        </div>
       </div>`;
-    console.error(e);
   }
+}
+
+function enableDemoMode() {
+  showToast('正在切换到演示模式...', 'info');
+  
+  // 临时切换到演示模式
+  window.DEMO_MODE = true;
+  
+  // 重新初始化
+  setTimeout(() => {
+    init();
+  }, 500);
 }
 
 // ═══════════════════════════════════════════════════
