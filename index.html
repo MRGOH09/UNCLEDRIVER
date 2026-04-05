@@ -451,7 +451,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica
 .uncle-option:hover { border-color: #1a73e8; background: #f8f9fa; }
 .uncle-option.active { border-color: #1a73e8; background: #e3f2fd; color: #1a73e8; }
 
-/* ── Bottom Navigation (老人家友好大导航) ── */
+/* ── Bottom Navigation (响应式导航) ── */
 .bottom-nav {
   position: fixed;
   bottom: 0;
@@ -462,6 +462,22 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica
   z-index: 1500;
   box-shadow: 0 -4px 16px rgba(0,0,0,0.2);
   padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* 桌面端导航优化 */
+@media (min-width: 768px) {
+  .bottom-nav {
+    position: static;
+    background: linear-gradient(135deg, #000, #1a1a1a);
+    border-radius: 16px;
+    margin: 20px auto;
+    max-width: 600px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  }
+  
+  body {
+    padding-bottom: 0;
+  }
 }
 
 .nav-item {
@@ -475,11 +491,18 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica
   transition: all 0.3s;
   user-select: none;
   min-height: 70px;
+  border-radius: 12px;
+  margin: 4px;
 }
 
 .nav-item.active {
   color: #fff;
   background: rgba(255,255,255,0.1);
+}
+
+.nav-item:hover {
+  background: rgba(255,255,255,0.05);
+  color: #ccc;
 }
 
 .nav-icon {
@@ -498,9 +521,38 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica
   letter-spacing: 0.5px;
 }
 
-/* 为底部导航留出空间 */
+/* 桌面端导航按钮优化 */
+@media (min-width: 768px) {
+  .nav-item {
+    flex-direction: row;
+    justify-content: center;
+    gap: 12px;
+    padding: 16px 24px;
+    min-height: auto;
+    border-radius: 12px;
+  }
+  
+  .nav-icon {
+    font-size: 20px;
+    margin-bottom: 0;
+  }
+  
+  .nav-label {
+    font-size: 16px;
+    font-weight: 600;
+  }
+  
+  .nav-item:hover {
+    background: rgba(255,255,255,0.1);
+    transform: translateY(-2px);
+  }
+}
+
+/* 为底部导航留出空间 (移动端) */
 body {
   padding-bottom: 90px;
+  max-width: 100vw;
+  overflow-x: hidden;
 }
 
 /* 页面容器 */
@@ -510,6 +562,49 @@ body {
 
 .page.active {
   display: block;
+}
+
+/* ── 响应式布局优化 ── */
+@media (min-width: 768px) {
+  body {
+    padding-bottom: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+  
+  .header {
+    text-align: center;
+    padding: 30px 20px;
+  }
+  
+  .header h1 {
+    font-size: 36px;
+  }
+  
+  /* 桌面端页面布局 */
+  .page {
+    min-height: calc(100vh - 200px);
+    padding: 20px 0;
+  }
+}
+
+/* 超宽屏幕优化 */
+@media (min-width: 1200px) {
+  body {
+    max-width: 1400px;
+  }
+  
+  .stats-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+  }
+  
+  .students-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
 }
 
 /* ── Page Specific Styles ── */
@@ -692,6 +787,14 @@ body {
   padding: 0 20px;
   margin-bottom: 20px;
   gap: 8px;
+  flex-wrap: wrap;
+}
+
+@media (min-width: 768px) {
+  .filter-tabs {
+    justify-content: center;
+    gap: 12px;
+  }
 }
 
 .filter-tab {
@@ -969,6 +1072,15 @@ body {
   display: flex;
   gap: 8px;
   overflow-x: auto;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+@media (min-width: 768px) {
+  .day-tabs {
+    overflow-x: visible;
+    gap: 12px;
+  }
 }
 
 .day-tab {
@@ -1042,6 +1154,79 @@ body {
 .btn-small:hover {
   background: #45a049;
   transform: translateY(-1px);
+}
+
+/* ── 响应式卡片和元素优化 ── */
+@media (min-width: 768px) {
+  .tabs {
+    max-width: 500px;
+    margin: 0 auto 20px;
+    gap: 16px;
+  }
+  
+  .tab {
+    border-radius: 12px;
+    padding: 16px 24px;
+    font-size: 18px;
+  }
+  
+  .date-selector {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 24px 32px;
+  }
+  
+  .uncle-indicator {
+    max-width: 600px;
+    margin: 0 auto 24px;
+    padding: 16px 24px;
+  }
+  
+  .filter-tabs {
+    max-width: 700px;
+    margin: 0 auto 24px;
+  }
+  
+  .filter-tab {
+    padding: 14px 20px;
+    font-size: 16px;
+  }
+  
+  .settings-groups {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  
+  .page-header {
+    padding: 32px 20px;
+  }
+  
+  .page-header h2 {
+    font-size: 32px;
+  }
+  
+  .page-header p {
+    font-size: 18px;
+  }
+}
+
+/* 超大屏幕优化 */
+@media (min-width: 1200px) {
+  .header h1 {
+    font-size: 42px;
+  }
+  
+  .page-header h2 {
+    font-size: 36px;
+  }
+  
+  .students-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
+  .filter-tabs, .uncle-indicator, .date-selector {
+    max-width: 900px;
+  }
 }
 </style>
 </head>
