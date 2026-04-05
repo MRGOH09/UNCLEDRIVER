@@ -1369,6 +1369,9 @@ function filterStudentsByUncle(students) {
 let currentPage = 'rollcall';
 
 function switchPage(page) {
+  console.log(`🔄 页面切换开始: ${currentPage} → ${page}`);
+  const startTime = performance.now();
+  
   // 隐藏所有页面
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -1382,18 +1385,24 @@ function switchPage(page) {
   // 根据页面加载对应内容
   switch(page) {
     case 'rollcall':
-      // 点名页面已经是默认加载的
+      console.log('📋 切换到点名页面');
       break;
     case 'students':
+      console.log('👥 切换到学生名单页面');
       loadStudentsPage();
       break;
     case 'data':
+      console.log('📊 切换到数据页面'); 
       loadDataPage();
       break;
     case 'settings':
+      console.log('⚙️ 切换到设置页面');
       loadSettingsPage();
       break;
   }
+  
+  const endTime = performance.now();
+  console.log(`✅ 页面切换完成，耗时: ${(endTime - startTime).toFixed(2)}ms`);
 }
 
 // 当数据加载完成后，刷新当前页面内容
@@ -1423,27 +1432,28 @@ function refreshCurrentPage() {
 function loadStudentsPage() {
   const content = document.getElementById('studentsContent');
   
+  // 立即显示页面结构，避免白屏
+  content.innerHTML = `
+    <div class="page-header">
+      <h2>📋 学生名单管理</h2>
+      <p>查看和管理所有学生信息</p>
+    </div>
+    <div id="studentsPageContent"></div>
+  `;
+  
   // 检查数据是否已加载
   if (!studentsC.length && !studentsB.length) {
-    content.innerHTML = `
-      <div class="page-header">
-        <h2>📋 学生名单管理</h2>
-        <p>查看和管理所有学生信息</p>
-      </div>
-      
+    document.getElementById('studentsPageContent').innerHTML = `
       <div class="loading">
         <div class="spinner"></div>
         <div class="loading-text">正在加载学生数据...</div>
       </div>
     `;
     
-    // 如果数据未加载，等待主数据加载完成后再渲染
-    const checkData = setInterval(() => {
-      if (studentsC.length > 0 || studentsB.length > 0) {
-        clearInterval(checkData);
-        renderStudentsPageContent();
-      }
-    }, 100);
+    // 使用Promise而不是setInterval，减少延迟
+    waitForData().then(() => {
+      renderStudentsPageContent();
+    });
     
     return;
   }
@@ -1451,16 +1461,47 @@ function loadStudentsPage() {
   renderStudentsPageContent();
 }
 
+// 优化的数据等待函数
+function waitForData() {
+  return new Promise((resolve) => {
+    if (studentsC.length > 0 || studentsB.length > 0) {
+      resolve();
+      return;
+    }
+    
+    // 最多等待3秒，避免无限等待
+    let attempts = 0;
+    const maxAttempts = 30; // 3秒 (100ms * 30)
+    
+    const checkData = setInterval(() => {
+      attempts++;
+      
+      if (studentsC.length > 0 || studentsB.length > 0) {
+        clearInterval(checkData);
+        resolve();
+      } else if (attempts >= maxAttempts) {
+        clearInterval(checkData);
+        console.warn('⚠️ 数据加载超时，使用备用方案');
+        // 如果超时，尝试强制刷新或使用演示数据
+        if (typeof enableDemoMode === 'function') {
+          enableDemoMode();
+        }
+        resolve();
+      }
+    }, 100);
+  });
+}
+
 function renderStudentsPageContent() {
-  const content = document.getElementById('studentsContent');
+  const container = document.getElementById('studentsPageContent');
+  if (!container) {
+    console.error('❌ studentsPageContent 容器未找到');
+    return;
+  }
+  
   const totalStudents = studentsC.length + studentsB.length;
   
-  content.innerHTML = `
-    <div class="page-header">
-      <h2>📋 学生名单管理</h2>
-      <p>查看和管理所有学生信息</p>
-    </div>
-    
+  container.innerHTML = `
     <div class="filter-tabs">
       <div class="filter-tab active" onclick="filterStudentsList('all')">
         全部学生 <span class="badge">${totalStudents}</span>
@@ -1477,6 +1518,8 @@ function renderStudentsPageContent() {
       ${renderStudentsList('all')}
     </div>
   `;
+  
+  console.log(`✅ 学生页面渲染完成，显示 ${totalStudents} 个学生`);
 }
 
 function filterStudentsList(type) {

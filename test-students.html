@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🧪 名单页面测试</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica Neue', sans-serif;
+      background: #000;
+      color: #fff;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    
+    .test-header {
+      text-align: center;
+      margin-bottom: 30px;
+      padding: 20px;
+      background: #1a1a1a;
+      border-radius: 12px;
+      border: 2px solid #333;
+    }
+    
+    .test-header h1 {
+      font-size: 24px;
+      margin-bottom: 8px;
+      color: #4CAF50;
+    }
+    
+    .status {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      margin: 4px;
+    }
+    
+    .status.loading { background: #FFC107; color: #000; }
+    .status.success { background: #4CAF50; color: #fff; }
+    .status.error { background: #f44336; color: #fff; }
+    
+    .debug-section {
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    
+    .debug-section h3 {
+      color: #4CAF50;
+      margin-bottom: 16px;
+      font-size: 18px;
+    }
+    
+    .debug-output {
+      background: #0a0a0a;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 12px;
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 13px;
+      max-height: 200px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      color: #ccc;
+    }
+    
+    .students-grid {
+      display: grid;
+      gap: 16px;
+      margin-top: 20px;
+    }
+    
+    .student-card {
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 12px;
+      padding: 16px;
+      transition: all 0.2s;
+    }
+    
+    .student-card:hover {
+      border-color: #555;
+      background: #222;
+    }
+    
+    .student-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    
+    .student-header h4 {
+      font-size: 18px;
+      font-weight: 600;
+      color: #fff;
+      margin: 0;
+    }
+    
+    .student-type {
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    
+    .student-type.pickup {
+      background: rgba(255, 193, 7, 0.2);
+      color: #FFC107;
+    }
+    
+    .student-type.dropoff {
+      background: rgba(33, 150, 243, 0.2);
+      color: #2196F3;
+    }
+    
+    .detail-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+    
+    .detail-icon {
+      width: 20px;
+      text-align: center;
+      margin-right: 12px;
+    }
+    
+    .detail-text {
+      color: #ccc;
+      flex: 1;
+    }
+    
+    .btn {
+      background: #4CAF50;
+      color: #fff;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      margin: 4px;
+      transition: all 0.2s;
+    }
+    
+    .btn:hover {
+      background: #45a049;
+      transform: translateY(-1px);
+    }
+    
+    .btn-secondary {
+      background: #333;
+      border: 1px solid #555;
+    }
+    
+    .btn-secondary:hover {
+      background: #444;
+      border-color: #666;
+    }
+    
+    .loading-spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid #333;
+      border-radius: 50%;
+      border-top-color: #4CAF50;
+      animation: spin 1s ease-in-out infinite;
+      margin-right: 8px;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .error-box {
+      background: rgba(244, 67, 54, 0.1);
+      border: 1px solid rgba(244, 67, 54, 0.3);
+      border-radius: 8px;
+      padding: 16px;
+      color: #f44336;
+    }
+  </style>
+</head>
+<body>
+
+<div class="test-header">
+  <h1>🧪 名单页面数据加载测试</h1>
+  <p>调试学生数据加载和显示问题</p>
+  <div id="statusIndicator">
+    <span class="status loading">初始化中</span>
+  </div>
+</div>
+
+<div class="debug-section">
+  <h3>📊 数据状态监控</h3>
+  <div id="dataStatus">
+    <p>studentsC: <span id="studentsCStatus">未加载</span></p>
+    <p>studentsB: <span id="studentsBStatus">未加载</span></p>
+    <p>当前Uncle: <span id="uncleStatus">未选择</span></p>
+    <p>页面状态: <span id="pageStatus">初始化</span></p>
+  </div>
+</div>
+
+<div class="debug-section">
+  <h3>🔧 手动控制</h3>
+  <button class="btn" onclick="loadDemoData()">加载演示数据</button>
+  <button class="btn btn-secondary" onclick="loadRealData()">尝试真实API</button>
+  <button class="btn btn-secondary" onclick="clearData()">清空数据</button>
+  <button class="btn btn-secondary" onclick="refreshDisplay()">刷新显示</button>
+</div>
+
+<div class="debug-section">
+  <h3>📝 调试日志</h3>
+  <div class="debug-output" id="debugLog">等待操作...</div>
+</div>
+
+<div class="debug-section">
+  <h3>👥 学生列表</h3>
+  <div id="studentsDisplay">
+    <div class="loading-spinner"></div>
+    正在加载学生数据...
+  </div>
+</div>
+
+<script>
+// 全局变量
+let studentsC = [];
+let studentsB = [];
+let currentUncle = localStorage.getItem('selectedUncle') || null;
+
+// 演示数据
+const mockData = {
+  studentsC: [
+    { name: 'Alice李', driver: 'Uncle王', address: 'Jalan Bukit Bintang 123', phone: '0123456789', time: '07:30', type: 'C' },
+    { name: 'Bob陈', driver: 'Uncle李', address: 'KLCC附近', phone: '0198765432', time: '07:45', type: 'C' },
+    { name: 'Carol王', driver: 'Uncle王', address: 'Mont Kiara', phone: '0187654321', time: '08:00', type: 'C' }
+  ],
+  studentsB: [
+    { name: 'David林', driver: 'Uncle李', address: 'Bangsar South', phone: '0176543210', time: '15:30', type: 'B' },
+    { name: 'Eva张', driver: 'Uncle王', address: 'Subang Jaya', phone: '0165432109', time: '16:00', type: 'B' },
+    { name: 'Frank黄', driver: 'Uncle李', address: 'Petaling Jaya', phone: '0154321098', time: '16:15', type: 'B' }
+  ]
+};
+
+// 调试日志函数
+function log(message) {
+  const timestamp = new Date().toLocaleTimeString('zh-CN');
+  const logEl = document.getElementById('debugLog');
+  logEl.textContent += `[${timestamp}] ${message}\n`;
+  logEl.scrollTop = logEl.scrollHeight;
+  console.log(`[StudentTest] ${message}`);
+}
+
+// 更新状态显示
+function updateStatus() {
+  document.getElementById('studentsCStatus').textContent = `${studentsC.length} 条记录`;
+  document.getElementById('studentsBStatus').textContent = `${studentsB.length} 条记录`;
+  document.getElementById('uncleStatus').textContent = currentUncle || '未选择';
+  document.getElementById('pageStatus').textContent = '运行中';
+  
+  // 更新顶部状态指示器
+  const statusEl = document.getElementById('statusIndicator');
+  const totalStudents = studentsC.length + studentsB.length;
+  
+  if (totalStudents > 0) {
+    statusEl.innerHTML = '<span class="status success">数据加载成功</span>';
+  } else {
+    statusEl.innerHTML = '<span class="status error">无数据</span>';
+  }
+}
+
+// 过滤学生按Uncle
+function filterStudentsByUncle(students) {
+  if (!currentUncle) return students;
+  return students.filter(s => s.driver === currentUncle);
+}
+
+// 渲染学生列表
+function renderStudents() {
+  log('开始渲染学生列表...');
+  
+  const container = document.getElementById('studentsDisplay');
+  const allStudents = [...studentsC, ...studentsB];
+  const filtered = filterStudentsByUncle(allStudents);
+  
+  log(`总学生: ${allStudents.length}, 过滤后: ${filtered.length}`);
+  
+  if (filtered.length === 0) {
+    const reason = !currentUncle ? '请先选择Uncle身份' : 
+                   allStudents.length === 0 ? '暂无学生数据' : '当前Uncle没有负责的学生';
+    
+    container.innerHTML = `
+      <div class="error-box">
+        <h4>无数据显示</h4>
+        <p>${reason}</p>
+        ${!currentUncle ? '<button class="btn" onclick="selectUncle()">选择Uncle</button>' : ''}
+      </div>
+    `;
+    return;
+  }
+  
+  const html = `
+    <div class="students-grid">
+      ${filtered.map(student => `
+        <div class="student-card">
+          <div class="student-header">
+            <h4>${student.name || '未知姓名'}</h4>
+            <span class="student-type ${student.type === 'C' ? 'pickup' : 'dropoff'}">
+              ${student.type === 'C' ? '🌅 来接' : '🏠 送回'}
+            </span>
+          </div>
+          
+          <div class="detail-row">
+            <span class="detail-icon">⏰</span>
+            <span class="detail-text">${student.time || '暂无时间'}</span>
+          </div>
+          
+          <div class="detail-row">
+            <span class="detail-icon">🚗</span>
+            <span class="detail-text">${student.driver || '暂无司机'}</span>
+          </div>
+          
+          <div class="detail-row">
+            <span class="detail-icon">📍</span>
+            <span class="detail-text">${student.address || '暂无地址'}</span>
+          </div>
+          
+          <div class="detail-row">
+            <span class="detail-icon">📞</span>
+            <span class="detail-text">${student.phone || '暂无电话'}</span>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+  
+  container.innerHTML = html;
+  log(`渲染完成，显示 ${filtered.length} 个学生`);
+}
+
+// 加载演示数据
+function loadDemoData() {
+  log('🎭 加载演示数据...');
+  studentsC = mockData.studentsC;
+  studentsB = mockData.studentsB;
+  updateStatus();
+  renderStudents();
+  log('✅ 演示数据加载完成');
+}
+
+// 尝试加载真实数据
+function loadRealData() {
+  log('🔄 尝试加载真实API数据...');
+  log('⚠️ 真实API功能未在此测试页面实现');
+  log('💡 请在主页面测试真实API连接');
+}
+
+// 清空数据
+function clearData() {
+  log('🗑️ 清空所有数据...');
+  studentsC = [];
+  studentsB = [];
+  updateStatus();
+  renderStudents();
+  log('✅ 数据已清空');
+}
+
+// 刷新显示
+function refreshDisplay() {
+  log('🔄 刷新显示...');
+  updateStatus();
+  renderStudents();
+  log('✅ 显示已刷新');
+}
+
+// 选择Uncle
+function selectUncle() {
+  const uncles = ['Uncle王', 'Uncle李'];
+  const selected = prompt(`请选择Uncle身份：\n${uncles.map((u, i) => `${i + 1}. ${u}`).join('\n')}`);
+  
+  if (selected) {
+    const index = parseInt(selected) - 1;
+    if (index >= 0 && index < uncles.length) {
+      currentUncle = uncles[index];
+      localStorage.setItem('selectedUncle', currentUncle);
+      log(`✅ 已选择Uncle: ${currentUncle}`);
+      updateStatus();
+      renderStudents();
+    } else {
+      log('❌ 无效选择');
+    }
+  }
+}
+
+// 初始化
+function init() {
+  log('🚀 测试页面初始化...');
+  updateStatus();
+  
+  // 自动加载演示数据
+  setTimeout(() => {
+    loadDemoData();
+  }, 1000);
+}
+
+// 启动
+init();
+</script>
+
+</body>
+</html>
