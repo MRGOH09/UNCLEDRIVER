@@ -1734,12 +1734,10 @@ function loadStudentsPage() {
     // 强制启用演示模式，确保有数据显示
     if (typeof enableDemoMode === 'function' && !(studentsC?.length > 0 || studentsB?.length > 0)) {
       console.log('🎭 强制启用演示模式以确保名单显示');
+      enableDemoMode();
       setTimeout(() => {
-        enableDemoMode();
-        setTimeout(() => {
-          renderStudentsPageContent();
-        }, 1000);
-      }, 500);
+        renderStudentsPageContent();
+      }, 800);
       return;
     }
     
@@ -1898,29 +1896,16 @@ async function loadStudentsForDay(dayPrefix) {
   }
   
   try {
-    if (DEMO_MODE || window.DEMO_MODE) {
-      // 演示模式 - 使用模拟数据
-      console.log('🎭 使用演示数据');
-      setTimeout(() => {
-        renderStudentsList('all');
-        console.log(`✅ ${dayPrefix} 数据加载完成 (演示模式)`);
-      }, 500);
-      return;
-    }
+    // 直接使用现有数据，不管是演示模式还是真实模式
+    console.log('📋 使用当前已加载的数据');
     
-    // 真实模式 - 重新获取数据
-    const colC = `${dayPrefix}(C)`;
-    const colB = `${dayPrefix}(B)`;
-    
-    // 这里应该重新调用API获取指定日期的数据
-    // 为了简化，目前使用现有数据
-    console.log(`⚠️ 真实API模式暂时使用当前数据`);
-    
+    // 短暂延迟模拟加载效果，然后直接显示
     setTimeout(() => {
       if (container) {
-        container.innerHTML = renderStudentsList('all');
+        const studentsHTML = renderStudentsList('all');
+        container.innerHTML = studentsHTML;
+        console.log(`✅ ${dayPrefix} 数据显示完成`);
       }
-      console.log(`✅ ${dayPrefix} 数据加载完成`);
     }, 300);
     
   } catch (error) {
