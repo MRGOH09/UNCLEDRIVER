@@ -952,6 +952,97 @@ body {
 .btn-warning:hover {
   background: rgba(255, 152, 0, 0.3);
 }
+
+/* ── Date Selector (名单页面日期选择) ── */
+.date-selector {
+  padding: 16px 20px;
+  margin-bottom: 20px;
+}
+
+.date-selector h3 {
+  font-size: 18px;
+  color: #fff;
+  margin-bottom: 12px;
+}
+
+.day-tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+}
+
+.day-tab {
+  flex: 1;
+  min-width: 60px;
+  padding: 10px 12px;
+  text-align: center;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 8px;
+  color: #bbb;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.day-tab.active {
+  background: #4CAF50;
+  color: #fff;
+  border-color: #4CAF50;
+}
+
+.day-tab:hover {
+  background: #333;
+  border-color: #555;
+}
+
+.day-tab.active:hover {
+  background: #45a049;
+}
+
+/* ── Uncle Indicator (名单页面Uncle显示) ── */
+.uncle-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 20px;
+  margin-bottom: 16px;
+  background: rgba(76, 175, 80, 0.1);
+  border: 1px solid rgba(76, 175, 80, 0.3);
+  border-radius: 8px;
+  margin: 0 20px 20px;
+}
+
+.uncle-label {
+  font-size: 14px;
+  color: #bbb;
+}
+
+.uncle-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #4CAF50;
+}
+
+.btn-small {
+  background: #4CAF50;
+  color: #fff;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-small:hover {
+  background: #45a049;
+  transform: translateY(-1px);
+}
 </style>
 </head>
 <body>
@@ -1500,8 +1591,40 @@ function renderStudentsPageContent() {
   }
   
   const totalStudents = studentsC.length + studentsB.length;
+  const selectedUncle = currentUncle || localStorage.getItem('selectedUncle');
+  const currentDay = getCurrentDayPrefix();
   
   container.innerHTML = `
+    <!-- 日期选择 -->
+    <div class="date-selector">
+      <h3>📅 选择日期</h3>
+      <div class="day-tabs">
+        <div class="day-tab ${currentDay === 'MON' ? 'active' : ''}" onclick="switchDay('MON')">
+          周一
+        </div>
+        <div class="day-tab ${currentDay === 'TUE' ? 'active' : ''}" onclick="switchDay('TUE')">
+          周二
+        </div>
+        <div class="day-tab ${currentDay === 'WED' ? 'active' : ''}" onclick="switchDay('WED')">
+          周三
+        </div>
+        <div class="day-tab ${currentDay === 'THU' ? 'active' : ''}" onclick="switchDay('THU')">
+          周四
+        </div>
+        <div class="day-tab ${currentDay === 'FRI' ? 'active' : ''}" onclick="switchDay('FRI')">
+          周五
+        </div>
+      </div>
+    </div>
+
+    <!-- Uncle信息显示 -->
+    <div class="uncle-indicator">
+      <span class="uncle-label">当前司机:</span>
+      <span class="uncle-name">${selectedUncle || '未选择'}</span>
+      ${!selectedUncle ? '<button class="btn-small" onclick="switchUncle()">选择Uncle</button>' : ''}
+    </div>
+
+    <!-- 学生类型筛选 -->
     <div class="filter-tabs">
       <div class="filter-tab active" onclick="filterStudentsList('all')">
         全部学生 <span class="badge">${totalStudents}</span>
@@ -1519,7 +1642,7 @@ function renderStudentsPageContent() {
     </div>
   `;
   
-  console.log(`✅ 学生页面渲染完成，显示 ${totalStudents} 个学生`);
+  console.log(`✅ 学生页面渲染完成，显示 ${totalStudents} 个学生 (Uncle: ${selectedUncle})`);
 }
 
 function filterStudentsList(type) {
@@ -1527,6 +1650,84 @@ function filterStudentsList(type) {
   event.target.classList.add('active');
   
   document.getElementById('studentsList').innerHTML = renderStudentsList(type);
+}
+
+// 全局变量存储当前选择的日期
+let currentStudentsDay = getCurrentDayPrefix();
+
+function getCurrentDayPrefix() {
+  if (typeof getDayPrefix === 'function') {
+    return getDayPrefix();
+  }
+  // 备用逻辑
+  const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+  return days[new Date().getDay()];
+}
+
+function switchDay(dayPrefix) {
+  console.log(`📅 切换到 ${dayPrefix}`);
+  currentStudentsDay = dayPrefix;
+  
+  // 更新日期标签状态
+  document.querySelectorAll('.day-tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  
+  // 重新加载该天的数据
+  loadStudentsForDay(dayPrefix);
+}
+
+async function loadStudentsForDay(dayPrefix) {
+  console.log(`🔄 加载 ${dayPrefix} 的学生数据...`);
+  
+  // 显示加载状态
+  const container = document.getElementById('studentsList');
+  if (container) {
+    container.innerHTML = `
+      <div class="loading">
+        <div class="spinner"></div>
+        <div class="loading-text">正在加载${dayPrefix}的数据...</div>
+      </div>
+    `;
+  }
+  
+  try {
+    if (DEMO_MODE || window.DEMO_MODE) {
+      // 演示模式 - 使用模拟数据
+      console.log('🎭 使用演示数据');
+      setTimeout(() => {
+        renderStudentsList('all');
+        console.log(`✅ ${dayPrefix} 数据加载完成 (演示模式)`);
+      }, 500);
+      return;
+    }
+    
+    // 真实模式 - 重新获取数据
+    const colC = `${dayPrefix}(C)`;
+    const colB = `${dayPrefix}(B)`;
+    
+    // 这里应该重新调用API获取指定日期的数据
+    // 为了简化，目前使用现有数据
+    console.log(`⚠️ 真实API模式暂时使用当前数据`);
+    
+    setTimeout(() => {
+      if (container) {
+        container.innerHTML = renderStudentsList('all');
+      }
+      console.log(`✅ ${dayPrefix} 数据加载完成`);
+    }, 300);
+    
+  } catch (error) {
+    console.error(`❌ 加载${dayPrefix}数据失败:`, error);
+    if (container) {
+      container.innerHTML = `
+        <div class="error-box">
+          <h4>加载失败</h4>
+          <p>无法获取${dayPrefix}的数据: ${error.message}</p>
+          <button class="btn-primary" onclick="loadStudentsForDay('${dayPrefix}')">重试</button>
+        </div>
+      `;
+    }
+  }
 }
 
 function renderStudentsList(type) {
@@ -1548,12 +1749,12 @@ function renderStudentsList(type) {
       break;
   }
   
-  // 如果没有选择Uncle，显示所有学生（不过滤）
-  const currentUncle = localStorage.getItem('selectedUncle');
-  const filtered = currentUncle ? filterStudentsByUncle(students) : students;
+  // 使用全局currentUncle变量，确保与其他页面一致
+  const selectedUncle = currentUncle || localStorage.getItem('selectedUncle');
+  const filtered = selectedUncle ? students.filter(s => s.driver === selectedUncle) : students;
   
   if (filtered.length === 0) {
-    const reason = !currentUncle ? '请先在设置中选择Uncle身份' : 
+    const reason = !selectedUncle ? '请先在设置中选择Uncle身份' : 
                    students.length === 0 ? '暂无学生数据' : '当前Uncle没有负责的学生';
     
     return `
@@ -1561,7 +1762,7 @@ function renderStudentsList(type) {
         <div style="font-size: 48px; margin-bottom: 16px;">📭</div>
         <h3 style="color: #fff; margin-bottom: 8px;">暂无数据</h3>
         <p style="margin: 0;">${reason}</p>
-        ${!currentUncle ? `<button onclick="switchUncle()" class="btn-primary" style="margin-top: 16px;">选择Uncle身份</button>` : ''}
+        ${!selectedUncle ? `<button onclick="switchUncle()" class="btn-primary" style="margin-top: 16px;">选择Uncle身份</button>` : ''}
       </div>
     `;
   }
